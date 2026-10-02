@@ -138,6 +138,8 @@ npm run dev -- --host 127.0.0.1 --strictPort
 
 Open `http://127.0.0.1:3000` and sign in with a manager's **username and password**. The example `VITE_API_URL=/api` sends requests through Vite's local proxy to Django on port 8000. Keep `VITE_` variables free of secrets: Vite embeds them in browser code. The [frontend guide](frontend/README.md) explains alternate API ports.
 
+If Windows blocks `npm` with an execution-policy error about an unsigned `npm.ps1`, use the `.cmd` shim instead — `npm.cmd ci`, `npm.cmd run dev`, `npx.cmd playwright install chromium`. This affects local runs only; the documented requirements otherwise apply unchanged.
+
 ## 5. Check the local workflow
 
 Submit a request as a department manager, approve it as a different head manager, assign employees as HR, then preview and download the review CSV. Check the department view and audit history afterward. `total_hours` means total employee-hours: five people working three hours is 15 employee-hours. HR must approve this interpretation before using legacy quantities operationally.
