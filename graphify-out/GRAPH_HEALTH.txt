@@ -1,0 +1,38 @@
+[graphify] MultiDiGraph edge-collapse diagnostic
+input: <in-memory>
+input_stage: provided JSON (normal graph.json is post-build)
+effective_directed: <direct-call>
+nodes: 253
+unverified_code_nodes: 0
+raw_edges: 695
+valid_candidate_edges: 585
+missing_endpoint_edges: 0
+dangling_endpoint_edges: 110
+self_loop_edges: 3
+exact_duplicate_edges: 0
+directed_unique_endpoint_pairs: 582
+directed_same_endpoint_collapsed_edges: 3
+undirected_unique_endpoint_pairs: 582
+undirected_same_endpoint_collapsed_edges: 3
+same_endpoint_group_count: 3
+relation_variant_groups: 2
+source_file_variant_groups: 0
+source_location_variant_groups: 1
+context_variant_groups: 1
+post_build_graph_type: Graph
+post_build_edges: 582
+producer_suppression_sites: 12
+producer_suppression_examples:
+  - L1336 seen_ids arity=unknown
+  - L1869 seen_ids arity=unknown
+  - L1871 seen_doc_refs arity=unknown
+  - L2241 seen_ids arity=unknown
+  - L2388 seen_ids arity=unknown
+  - L3026 seen_keys arity=unknown
+  - L3195 seen_keys arity=unknown
+  - L4887 seen_ids arity=unknown
+examples:
+  - backend_overtimeapp_tests_postgresqlconcurrencytests_concurrently -> backend_overtimeapp_tests_postgresqlconcurrencytests_concurrently_run edges=2 relations=['contains', 'indirect_call'] locations=['L337', 'L349'] contexts=['', 'argument']
+  - frontend_src_context_authcontext_authcontextvalue -> frontend_src_types_user edges=2 relations=['references'] locations=['L10', 'L6'] contexts=['field', 'generic_arg']
+  - backend_overtimeapp_views_selected_export -> backend_overtimeapp_serializers_exportselectionserializer edges=2 relations=['calls', 'uses'] locations=['L232'] contexts=['', 'call']
+note: normal graph.json is post-build; raw producer loss must be measured earlier.

@@ -1,0 +1,15 @@
+[Unit]
+Description=Overtime approval API
+After=network.target
+[Service]
+User=overtime
+Group=overtime
+WorkingDirectory=/opt/overtime/backend
+EnvironmentFile=/etc/overtime/production.env
+Environment=PATH=/opt/overtime/backend/venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash /opt/overtime/backend/start-production.sh
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target

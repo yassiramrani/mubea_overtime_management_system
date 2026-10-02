@@ -1,0 +1,212 @@
+{
+  "frontend/src/App.tsx": {
+    "mtime": 1788803961.0,
+    "seen": 1789374494.077301,
+    "ast_hash": "85b8b7ff1ebb4263649edac3ad0e8a21",
+    "semantic_hash": "85b8b7ff1ebb4263649edac3ad0e8a21"
+  },
+  "frontend/src/components/Workflow.tsx": {
+    "mtime": 1788804986.0,
+    "seen": 1789374494.0773056,
+    "ast_hash": "063915658873cd0ca5d5f7b98e8857df",
+    "semantic_hash": "063915658873cd0ca5d5f7b98e8857df"
+  },
+  "frontend/src/context/AuthContext.tsx": {
+    "mtime": 1788788438.0,
+    "seen": 1789374494.0773077,
+    "ast_hash": "a25768a8824d99145ae134645879ccdf",
+    "semantic_hash": "a25768a8824d99145ae134645879ccdf"
+  },
+  "frontend/src/hooks/usePaged.ts": {
+    "mtime": 1789374490.5802982,
+    "seen": 1789374494.077309,
+    "ast_hash": "f5c212ed87b2903ac2ae850e6bf1e4bb",
+    "semantic_hash": "f5c212ed87b2903ac2ae850e6bf1e4bb"
+  },
+  "frontend/src/main.tsx": {
+    "mtime": 1788344173.0,
+    "seen": 1789374494.0773098,
+    "ast_hash": "42c0b1d9c2751a5e4e55876cee46fc57",
+    "semantic_hash": "42c0b1d9c2751a5e4e55876cee46fc57"
+  },
+  "frontend/src/pages/DepartmentManagerDashboard.tsx": {
+    "mtime": 1789374490.5822976,
+    "seen": 1789374494.077311,
+    "ast_hash": "c68ae12614a1120ede869b57aa07d329",
+    "semantic_hash": "c68ae12614a1120ede869b57aa07d329"
+  },
+  "frontend/src/pages/HRManagerDashboard.tsx": {
+    "mtime": 1788804987.0,
+    "seen": 1789374494.0773122,
+    "ast_hash": "a9db4f124db5bd6c9bc734b70883628e",
+    "semantic_hash": "a9db4f124db5bd6c9bc734b70883628e"
+  },
+  "frontend/src/pages/HeadManagerDashboard.tsx": {
+    "mtime": 1788804987.0,
+    "seen": 1789374494.0773132,
+    "ast_hash": "f0ee495a70d176d061fad9b9b6e36522",
+    "semantic_hash": "f0ee495a70d176d061fad9b9b6e36522"
+  },
+  "frontend/src/pages/LoginPage.tsx": {
+    "mtime": 1788952744.0,
+    "seen": 1789374494.0773144,
+    "ast_hash": "fd61c4fa4705f2de808ea9e385f31cda",
+    "semantic_hash": "fd61c4fa4705f2de808ea9e385f31cda"
+  },
+  "frontend/src/services/api.ts": {
+    "mtime": 1788788438.0,
+    "seen": 1789374494.077315,
+    "ast_hash": "00860c7bdd0a476d9fd600afcb65bba1",
+    "semantic_hash": "00860c7bdd0a476d9fd600afcb65bba1"
+  },
+  "frontend/src/types.ts": {
+    "mtime": 1788804682.0,
+    "seen": 1789374494.077316,
+    "ast_hash": "cd6c98d089a7c16f9fa6bcc83c1ef110",
+    "semantic_hash": "cd6c98d089a7c16f9fa6bcc83c1ef110"
+  },
+  "frontend/src/vite-env.d.ts": {
+    "mtime": 1788344265.0,
+    "seen": 1789374494.0773175,
+    "ast_hash": "0352474ba2918efe13895edbc3780d94",
+    "semantic_hash": "0352474ba2918efe13895edbc3780d94"
+  },
+  "backend/core/__init__.py": {
+    "mtime": 1788342654.0,
+    "seen": 1789374494.077319,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "backend/core/asgi.py": {
+    "mtime": 1788342654.0,
+    "seen": 1789374494.0773199,
+    "ast_hash": "cacf14b0db85fe3d619ec10c1af58fcb",
+    "semantic_hash": "cacf14b0db85fe3d619ec10c1af58fcb"
+  },
+  "backend/core/production_settings.py": {
+    "mtime": 1788803638.0,
+    "seen": 1789374494.077321,
+    "ast_hash": "6607a8b18f2b3c91cd86ebba4f749fc3",
+    "semantic_hash": "6607a8b18f2b3c91cd86ebba4f749fc3"
+  },
+  "backend/core/settings.py": {
+    "mtime": 1788804613.0,
+    "seen": 1789374494.077322,
+    "ast_hash": "34af5e464f3a37933e91f68e089c1f04",
+    "semantic_hash": "34af5e464f3a37933e91f68e089c1f04"
+  },
+  "backend/core/test_settings.py": {
+    "mtime": 1788787670.0,
+    "seen": 1789374494.077323,
+    "ast_hash": "ed0704dd5198a59ab8d0e143c788b320",
+    "semantic_hash": "ed0704dd5198a59ab8d0e143c788b320"
+  },
+  "backend/core/urls.py": {
+    "mtime": 1788787670.0,
+    "seen": 1789374494.0773237,
+    "ast_hash": "cc83115e5fe7700b1f3e759b7b0fd64d",
+    "semantic_hash": "cc83115e5fe7700b1f3e759b7b0fd64d"
+  },
+  "backend/core/wsgi.py": {
+    "mtime": 1788342654.0,
+    "seen": 1789374494.0773249,
+    "ast_hash": "daf40c6096f4cff2ff599aa2c83c71b8",
+    "semantic_hash": "daf40c6096f4cff2ff599aa2c83c71b8"
+  },
+  "backend/overtimeapp/__init__.py": {
+    "mtime": 1788342655.0,
+    "seen": 1789374494.0773258,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "backend/overtimeapp/admin.py": {
+    "mtime": 1788787604.0,
+    "seen": 1789374494.0773268,
+    "ast_hash": "f4e5d57ce194e3e4a6821d7b9db78e81",
+    "semantic_hash": "f4e5d57ce194e3e4a6821d7b9db78e81"
+  },
+  "backend/overtimeapp/apps.py": {
+    "mtime": 1788342655.0,
+    "seen": 1789374494.077328,
+    "ast_hash": "614d99857aa60ea3736de0576f2b07c8",
+    "semantic_hash": "614d99857aa60ea3736de0576f2b07c8"
+  },
+  "backend/overtimeapp/auth_views.py": {
+    "mtime": 1788787670.0,
+    "seen": 1789374494.0773292,
+    "ast_hash": "b14f5fa7eca68045119403fe4989b1d5",
+    "semantic_hash": "b14f5fa7eca68045119403fe4989b1d5"
+  },
+  "backend/overtimeapp/authentication.py": {
+    "mtime": 1788787670.0,
+    "seen": 1789374494.0773308,
+    "ast_hash": "46a46ee60d32e75b31e690f91224cbd1",
+    "semantic_hash": "46a46ee60d32e75b31e690f91224cbd1"
+  },
+  "backend/overtimeapp/emails.py": {
+    "mtime": 1788803911.0,
+    "seen": 1789374494.0773318,
+    "ast_hash": "e4294db24c8b5f20b40c3b739ea3a9ba",
+    "semantic_hash": "e4294db24c8b5f20b40c3b739ea3a9ba"
+  },
+  "backend/overtimeapp/management/__init__.py": {
+    "mtime": 1788787670.0,
+    "seen": 1789374494.0773327,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "backend/overtimeapp/management/commands/__init__.py": {
+    "mtime": 1788787670.0,
+    "seen": 1789374494.077334,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "backend/overtimeapp/management/commands/check_legacy_requests.py": {
+    "mtime": 1788789536.0,
+    "seen": 1789374494.0773354,
+    "ast_hash": "f5c2a4200b491e7f9209337cdee5f60e",
+    "semantic_hash": "f5c2a4200b491e7f9209337cdee5f60e"
+  },
+  "backend/overtimeapp/management/commands/send_notifications.py": {
+    "mtime": 1788787670.0,
+    "seen": 1789374494.0773363,
+    "ast_hash": "b208ce98d9bc2279ddc5f8f42b569f77",
+    "semantic_hash": "b208ce98d9bc2279ddc5f8f42b569f77"
+  },
+  "backend/overtimeapp/models.py": {
+    "mtime": 1788803911.0,
+    "seen": 1789374494.077337,
+    "ast_hash": "0bb311603baca4e0fcd060e6b3155fbc",
+    "semantic_hash": "0bb311603baca4e0fcd060e6b3155fbc"
+  },
+  "backend/overtimeapp/permissions.py": {
+    "mtime": 1789374440.3998425,
+    "seen": 1789374494.077339,
+    "ast_hash": "745271462f9f97c36ad98827b61489ab",
+    "semantic_hash": "745271462f9f97c36ad98827b61489ab"
+  },
+  "backend/overtimeapp/serializers.py": {
+    "mtime": 1789374440.4008985,
+    "seen": 1789374494.0773396,
+    "ast_hash": "27e22dbc8cf9776179bfd0adeed806e7",
+    "semantic_hash": "27e22dbc8cf9776179bfd0adeed806e7"
+  },
+  "backend/overtimeapp/tests.py": {
+    "mtime": 1788803912.0,
+    "seen": 1789374494.0773406,
+    "ast_hash": "7c9cde965b8fa8916a0bd00782ed3c15",
+    "semantic_hash": "7c9cde965b8fa8916a0bd00782ed3c15"
+  },
+  "backend/overtimeapp/urls.py": {
+    "mtime": 1788787604.0,
+    "seen": 1789374494.0773418,
+    "ast_hash": "10036e5ff53e5a8a8c7cf9008fc528e9",
+    "semantic_hash": "10036e5ff53e5a8a8c7cf9008fc528e9"
+  },
+  "backend/overtimeapp/views.py": {
+    "mtime": 1789374440.4019568,
+    "seen": 1789374494.0773427,
+    "ast_hash": "0abab911beecbb55a195584f48614a69",
+    "semantic_hash": "0abab911beecbb55a195584f48614a69"
+  }
+}
