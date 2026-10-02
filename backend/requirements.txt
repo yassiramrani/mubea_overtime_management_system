@@ -9,3 +9,5 @@ psycopg2-binary==2.9.12
 python-dotenv==1.2.3
 redis==6.4.0
 sqlparse==0.6.0
+# Drives the optional Outlook desktop backend on Windows; not installed elsewhere.
+pywin32==312; sys_platform == 'win32'

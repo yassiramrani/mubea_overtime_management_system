@@ -1,6 +1,6 @@
 # Project status
 
-Updated 14 September 2026.
+Updated 2 October 2026.
 
 The application implements advance overtime submission, approval/rejection, pending withdrawal, employee assignment, audit history, and persisted review CSV exports. Phase 1 addresses workflow usability, filter/pagination behavior, assignment repair, browser verification, and setup accuracy.
 
@@ -12,15 +12,16 @@ The application implements advance overtime submission, approval/rejection, pend
 - CSV files use `approval-review-v1`; no automatic SAP connection or verified SAP import adapter exists.
 - Assignments use eligible application user accounts; a separate personnel directory has not been implemented.
 - Browser login uses expiring tokens in local storage. App-managed MFA and cookie-based browser sessions are Phase 2 work.
-- A notification outbox and delivery command exist. A real delivery schedule and verified SMTP service still need target-environment setup.
-- Production settings, Linux service/proxy examples, backups tooling, and CI configuration exist. They do not establish an installed service, active remote CI, or tested production recovery.
+- A notification outbox, a delivery command, and an account-provisioning command exist. Notifications have been delivered through a signed-in Outlook desktop client and through a local capture server for demonstration. A production sender (SMTP or API-based) and a real delivery schedule still need target-environment setup; nothing drains the outbox automatically yet.
+- Production settings, Linux service/proxy examples, and backups tooling exist. They do not establish an installed service or tested production recovery. Remote CI is active on `main` and passing, but its last run predates the notification changes, which are not yet committed.
+
 
 ## Remaining phases
 
 | Phase | Required outcome |
 |---|---|
 | 2 — Authentication | Verified email, authenticator MFA, recovery, protected admin access, and cookie sessions |
-| 3 — Staging and CI | Portable containers, reproducible staging, active remote CI, compiled-app browser checks, and readiness monitoring |
+| 3 — Staging and CI | Portable containers, reproducible staging, compiled-app browser checks against the current changes, and readiness monitoring. Remote CI exists and passes; staging does not. |
 | 4 — Business acceptance | HR-approved units, eligibility, permissions, and review CSV handoff |
 | 5 — Operations | Chosen host/domain, TLS/SMTP, scheduled notifications, alerting, off-host backups, tested recovery and rollback |
 | 6 — Pilot and launch | Full acceptance and load testing, one-department pilot, and HR/IT sign-off |

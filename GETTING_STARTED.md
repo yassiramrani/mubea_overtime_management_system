@@ -89,9 +89,30 @@ Sign in to Django administration as the superuser. Create separate active users,
 | Head manager | `head_manager` | Optional |
 | HR manager | `hr_manager` | Optional |
 
+The project owner's accounts can also be provisioned by the idempotent `seed_users` command, which creates or updates each account and its role profile:
+
+```powershell
+$env:SEED_PASSWORD = '<private-password-you-choose>'
+.\venv\Scripts\python.exe manage.py seed_users
+```
+
+```bash
+SEED_PASSWORD='<private-password-you-choose>' ./venv/bin/python manage.py seed_users
+```
+
+| Username | Person | Email | Profile role | Department |
+|---|---|---|---|---|
+| `yassir.amrani` | Yassir AMRANI | Yassir.AMRANI@mubea.com | `admin` (superuser) | — |
+| `andre-nicolas.faucon` | Andre-Nicolas Faucon | Andre-Nicolas.Faucon@mubea.com | `head_manager` | — |
+| `mariam.oumalek` | Mariam Oumalek | Mariam.Oumalek@mubea.com | `hr_manager` | — |
+| `mehdi.bousfiha` | Mehdi BOUSFIHA | Mehdi.BOUSFIHA@mubea.com | `dept_manager` | production |
+| `charaf.erraoui` | Charaf ERRAOUI | Charaf.ERRAOUI@mubea.com | `dept_manager` | logistics |
+
+Passwords are read from the process environment as `SEED_PASSWORD` (all accounts) or `SEED_PASSWORD_<ACCOUNT>` (one account, for example `SEED_PASSWORD_MEHDI_BOUSFIHA`); they are never stored in source. An account created without one receives a generated password that is printed once, so capture it from the command output and distribute it privately. Re-running the command refreshes emails, names, roles, and departments without changing an existing password; add `--reset-passwords` when you intend to replace one, and `--dry-run` to preview the changes. When this command provisions the administrator, `createsuperuser` is not needed.
+
 Use distinct people/accounts for submission and approval; self-approval is rejected. Keep ordinary manager accounts non-staff and non-superuser. Application accounts currently also serve as the employee directory: assignments accept active non-staff, non-superuser accounts whose profile role is not `admin`. Standalone employee accounts do not need a manager role.
 
-Set email addresses for accounts involved in notifications. The console backend displays mail only when the delivery command runs. Creating records does not prove SMTP delivery.
+Set email addresses for accounts involved in notifications. The console backend displays mail only when the delivery command runs. Creating records does not prove SMTP delivery. `seed_users` sets the addresses above automatically.
 
 ## 4. Start the frontend
 
@@ -132,6 +153,61 @@ In a third terminal in `backend/`, deliver queued local notifications:
 ```
 
 Run this command periodically to process due notifications; no Celery worker is used.
+
+Recipients are resolved from the accounts above by role: head managers are notified on submission, HR managers and the requester on approval, and the requester on rejection or assignment. The queued rows are visible in Django administration and, for application admins, through the email-log API.
+
+### Send real email instead of the console
+
+The example above uses the console backend, which prints messages instead of sending them. To deliver mail, set the SMTP values in `backend/.env` and remove the `#` from that block, keeping the credentials private:
+
+```text
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.office365.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_USE_SSL=False
+EMAIL_HOST_USER=<sender mailbox>
+EMAIL_HOST_PASSWORD=<mailbox or app password>
+DEFAULT_FROM_EMAIL=<sender mailbox>
+```
+
+Confirm the relay hostname, port, and TLS mode with IT before relying on them; an on-premise relay may differ. Then verify delivery before trusting the outbox:
+
+```powershell
+.\venv\Scripts\python.exe manage.py send_test_email --to Yassir.AMRANI@mubea.com
+```
+
+The command sends one message through the configured backend and reports the failure reason without printing credentials. It never touches the notification outbox, so it cannot mark a real notification as failed. Delivery is attempted only when `send_notifications` runs, and a message is marked `failed` after five attempts; fix the configuration before leaving the scheduler unattended.
+
+### Demonstrate notifications without a mail server
+
+To show the real emails before requesting SMTP access, receive them locally with the bundled catcher. It speaks SMTP and writes each message to a `.eml` file that opens in any mail client:
+
+```powershell
+# Terminal 1, from the project root
+python scripts\mail_catcher.py
+```
+
+```powershell
+# Terminal 2, from backend/, point the application at the catcher
+$env:EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+$env:EMAIL_HOST = '127.0.0.1'
+$env:EMAIL_PORT = '1025'
+$env:EMAIL_USE_TLS = 'False'
+.\venv\Scripts\python.exe manage.py send_notifications --limit 100
+```
+
+Messages appear in `.verification/mail-catcher/`, which is gitignored. The catcher accepts unauthenticated mail, so bind it to `127.0.0.1` only and stop it when the demonstration ends.
+
+### Send through an already signed-in Outlook (Windows)
+
+If this machine runs Outlook with a signed-in account, notifications can be handed to it directly, with no mailbox password and nothing requested from IT:
+
+```text
+EMAIL_BACKEND=overtimeapp.email_backends.OutlookComEmailBackend
+```
+
+The message is sent from the signed-in Outlook account, so `DEFAULT_FROM_EMAIL` is ignored, and recipients see a normal email from that person's mailbox. It requires Windows, Outlook to be running and signed in, and the `pywin32` package, which `requirements.txt` installs on Windows only. Outlook's own programmatic-access policy still applies: company policy may prompt for confirmation or block sending, and the machine must stay signed in. Treat this as a prototype or interim sender; it cannot drive the Linux deployment, which needs SMTP or an API-based sender.
 
 ## 6. Run checks
 

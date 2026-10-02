@@ -8,6 +8,10 @@ See [Getting started](../GETTING_STARTED.md) for the canonical Windows/Linux ins
 
 Current browser authentication is username/password token login, with an eight-hour default token lifetime and server-side logout. Tokens are stored in browser local storage. Django session authentication is also accepted by the API. App MFA, verified-email enrollment, recovery screens, and migration to cookie-based browser sessions are **planned Phase 2 work**.
 
+## Account provisioning
+
+`manage.py seed_users` creates or updates the project owner's manager accounts and their role profiles. It is idempotent, reads passwords from `SEED_PASSWORD` or a per-account `SEED_PASSWORD_<ACCOUNT>` environment variable, and reports a generated password once if none is supplied. Existing passwords are preserved unless `--reset-passwords` is given. See [Getting started](../GETTING_STARTED.md#3-create-manager-accounts) for the account list.
+
 ## Main API contracts
 
 Routes below are relative to `/api/`. Lists use role-scoped access and normally return paginated `count`, `next`, `previous`, and `results` fields with 20 records per page.
@@ -53,6 +57,20 @@ python manage.py send_notifications --limit 100
 ```
 
 Use `.\venv\Scripts\python.exe` on Windows or `./venv/bin/python` on Linux if the environment is not activated. This is a scheduled management command, not Celery. Local console mail is printed by this command; SMTP is only used when configured. Retries stop after five failed attempts. Delivery can be duplicated if the process crashes after SMTP acceptance; it is at least once.
+
+Recipients come from active accounts by profile role: head managers on submission, HR managers and the requester on approval, and the requester on rejection or assignment.
+
+To check a real SMTP configuration without touching the outbox, run:
+
+```text
+python manage.py send_test_email --to <operator-address>
+```
+
+It prints the backend, sender, and server, sends one message, and exits non-zero with the server's reason if delivery fails. `EMAIL_TIMEOUT` abandons a stuck SMTP conversation so the scheduled command cannot hang. Set `EMAIL_USE_TLS=True` for STARTTLS on port 587, or use port 465 with `EMAIL_USE_TLS=False` and `EMAIL_USE_SSL=True` for implicit TLS.
+
+To demonstrate delivery without company SMTP access, run `scripts/mail_catcher.py` and point the application at it (`EMAIL_HOST=127.0.0.1`, `EMAIL_PORT=1025`, `EMAIL_USE_TLS=False`). It speaks SMTP and writes each message to `.verification/mail-catcher/` as an `.eml` file. Bind it to `127.0.0.1` only; it accepts unauthenticated mail.
+
+On Windows, `EMAIL_BACKEND=overtimeapp.email_backends.OutlookComEmailBackend` sends through the signed-in Outlook desktop client instead, using no mailbox password. It requires Outlook to be running and signed in, is subject to Outlook's programmatic-access policy, and cannot run on the Linux deployment; use it for a prototype or an interim Windows-hosted instance, not as the production sender.
 
 ## Local checks
 

@@ -43,3 +43,19 @@ A separate read-only security reviewer found two edge cases: rounded costs excee
 No production deployment, real SMTP delivery, actual SAP import, complete employee-policy validation, corporate SSO integration, external alert routing or live-infrastructure restore was performed. The production deployment check validates configuration, not the availability of the configured external services.
 
 Local logs, screenshots, the fake-data CSV and a private pre-migration SQLite backup are under ignored `.verification/`. Source-backed instructions and launch gates are in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md). The independent reviewer covered the changed workflow boundary; this was not an exhaustive repository security scan.
+
+## Account provisioning and notification delivery (2 October 2026)
+
+Added after the review above; the ordered checks above do not cover it.
+
+| Area | Command | Result |
+|---|---|---|
+| Manager account provisioning | `manage.py seed_users` against a disposable SQLite database, run twice | Created five accounts with the expected email, role, department and staff/superuser flags; the second run updated without duplicating and preserved existing passwords |
+| Backend suite | `manage.py test overtimeapp --settings=core.test_settings --noinput` | Passed, 49 tests; the three PostgreSQL concurrency tests were skipped without a PostgreSQL service |
+| Django checks | `manage.py check`, `manage.py makemigrations --check --dry-run` | No issues; no pending migrations |
+| Frontend build | `npm run build` | Passed (Vite 8.2.2, 91 modules) |
+| Browser workflow | `npm run test:smoke` | Passed using fake users, generated server passwords and a temporary database |
+| Outbox delivery over SMTP | Full workflow against a disposable database, delivered to `scripts/mail_catcher.py` | Four messages delivered; recipients resolved to the head manager, HR manager and requester, each with the matching role route |
+| Delivery through a mail client | Same workflow with every account redirected to one mailbox, delivered through the signed-in Outlook desktop client | Four messages accepted by Exchange and received in the Inbox |
+
+**Not established:** real delivery to the intended recipients, a production SMTP or API sender, automatic scheduling of `send_notifications`, HTML message bodies, or any SMTP authentication. Delivery over SMTP, delivery through Outlook, and the local capture server all ran against disposable databases that were then deleted. The Outlook sender is Windows-only, requires a signed-in desktop client, and `core.production_settings` refuses to start unless the SMTP backend is selected, so it cannot become the production sender by accident. A message is marked `failed` permanently after five delivery attempts, so the sender must be verified before any scheduler is enabled.

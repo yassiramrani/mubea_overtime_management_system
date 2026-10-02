@@ -1,3 +1,7 @@
+import os
+import re
+import sys
+import types
 from decimal import Decimal
 from datetime import timedelta
 from unittest.mock import patch
@@ -6,7 +10,11 @@ from io import StringIO
 from django.contrib.auth.models import User
 from django.contrib.admin.sites import AdminSite
 from django.core.cache import cache
+from django.core import mail
 from django.core.management import call_command
+from django.core.management.base import CommandError
+from django.core.mail.message import EmailMessage, EmailMultiAlternatives
+from django.core.exceptions import ImproperlyConfigured
 from django.db import IntegrityError, connection, transaction
 from django.test import TestCase, RequestFactory, override_settings
 from django.test.utils import CaptureQueriesContext
@@ -16,6 +24,8 @@ from rest_framework.authtoken.models import Token
 from .models import EmployeeAssignment, OvertimeRequest, SAPExport, UserProfile, AuditEvent, EmailLog, ExportBatch
 from .admin import OvertimeRequestAdmin, WorkflowReadOnlyAdmin
 from .views import selected_export
+from .email_backends import OutlookComEmailBackend
+from .management.commands import seed_users
 
 
 @override_settings(SECURE_SSL_REDIRECT=False, EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -440,6 +450,185 @@ class OvertimeWorkflowTests(TestCase):
         for _ in range(9):
             self.client.post('/api/auth/login/', {'username': 'dept', 'password': 'wrong'}, format='json')
         self.assertEqual(self.client.post('/api/auth/login/', {'username': 'dept', 'password': 'wrong'}, format='json').status_code, 429)
+
+
+class SeedUsersCommandTests(TestCase):
+    """The provisioning command must map the supplied people onto the expected roles."""
+
+    accounts = {account['username']: account for account in seed_users.ACCOUNTS}
+
+    def run_command(self, *args, password='seed-password-123'):
+        with patch.dict(os.environ, {'SEED_PASSWORD': password}):
+            output = StringIO()
+            call_command('seed_users', *args, stdout=output)
+        return output.getvalue()
+
+    def test_creates_accounts_with_roles_departments_and_emails(self):
+        self.run_command()
+        self.assertEqual(User.objects.filter(username__in=self.accounts).count(), len(self.accounts))
+        for username, account in self.accounts.items():
+            user = User.objects.get(username=username)
+            self.assertEqual(user.email, account['email'])
+            self.assertTrue(user.check_password('seed-password-123'))
+            self.assertEqual(user.profile.role, account['role'])
+            self.assertEqual(user.profile.department, account['department'])
+            self.assertEqual(user.is_superuser, account['is_superuser'])
+        self.assertEqual(self.accounts['mehdi.bousfiha']['department'], 'production')
+        self.assertEqual(self.accounts['charaf.erraoui']['department'], 'logistics')
+
+    def test_is_idempotent_and_preserves_existing_passwords(self):
+        self.run_command()
+        User.objects.filter(username='mariam.oumalek').update(email='')
+        self.run_command(password='a-different-password')
+        self.assertEqual(User.objects.filter(username__in=self.accounts).count(), len(self.accounts))
+        user = User.objects.get(username='mariam.oumalek')
+        self.assertTrue(user.check_password('seed-password-123'))
+        self.assertEqual(user.email, self.accounts['mariam.oumalek']['email'])
+        self.assertEqual(UserProfile.objects.filter(user=user).count(), 1)
+
+    def test_reset_passwords_replaces_existing_password(self):
+        self.run_command()
+        self.run_command('--reset-passwords', password='rotated-password-456')
+        self.assertTrue(User.objects.get(username='mariam.oumalek').check_password('rotated-password-456'))
+
+    def test_generates_a_password_when_none_is_supplied(self):
+        with patch.dict(os.environ, {'SEED_PASSWORD': '', 'SEED_PASSWORD_MARIAM_OUMALEK': ''}):
+            output = StringIO()
+            call_command('seed_users', stdout=output)
+        text = output.getvalue()
+        generated = re.search(r'Generated password for mariam\.oumalek: (\S+)', text).group(1)
+        self.assertTrue(User.objects.get(username='mariam.oumalek').check_password(generated))
+        self.assertTrue(User.objects.get(username='mariam.oumalek').has_usable_password())
+
+    def test_dry_run_writes_nothing(self):
+        output = self.run_command('--dry-run')
+        self.assertFalse(User.objects.filter(username__in=self.accounts).exists())
+        self.assertIn('would create mariam.oumalek (hr_manager)', output)
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+                   DEFAULT_FROM_EMAIL='overtime@mubea.com')
+class SendTestEmailCommandTests(TestCase):
+    """The verification command must report the configured backend and surface failures."""
+
+    def test_sends_one_message_to_the_requested_address(self):
+        output = StringIO()
+        call_command('send_test_email', '--to', 'Yassir.AMRANI@mubea.com', stdout=output)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['Yassir.AMRANI@mubea.com'])
+        self.assertEqual(mail.outbox[0].from_email, 'overtime@mubea.com')
+        self.assertIn('overtime@mubea.com', output.getvalue())
+
+    def test_rejects_an_invalid_recipient(self):
+        with self.assertRaises(CommandError):
+            call_command('send_test_email', '--to', 'not-an-address', stdout=StringIO())
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_reports_a_delivery_failure_instead_of_passing(self):
+        with patch('overtimeapp.management.commands.send_test_email.send_mail',
+                   side_effect=OSError('connection refused')):
+            with self.assertRaises(CommandError) as caught:
+                call_command('send_test_email', '--to', 'Yassir.AMRANI@mubea.com', stdout=StringIO())
+        self.assertIn('OSError', str(caught.exception))
+
+    def test_warns_when_a_non_smtp_backend_is_configured(self):
+        output = StringIO()
+        call_command('send_test_email', '--to', 'Yassir.AMRANI@mubea.com', stdout=output)
+        self.assertIn('nothing leaves this machine', output.getvalue())
+
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_reports_the_smtp_server_without_exposing_credentials(self):
+        with override_settings(EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend',
+                               EMAIL_HOST='smtp.office365.com', EMAIL_PORT=587,
+                               EMAIL_USE_TLS=True, EMAIL_HOST_PASSWORD='super-secret'):
+            output = StringIO()
+            with patch('overtimeapp.management.commands.send_test_email.send_mail', return_value=1):
+                call_command('send_test_email', '--to', 'Yassir.AMRANI@mubea.com', stdout=output)
+        self.assertIn('smtp.office365.com:587', output.getvalue())
+        self.assertNotIn('super-secret', output.getvalue())
+
+
+class FakeOutlookItem:
+    def __init__(self):
+        self.To = self.CC = self.BCC = self.Subject = self.Body = self.HTMLBody = ''
+        self.sent = False
+
+    def Send(self):
+        self.sent = True
+
+
+class FakeOutlookItemThatFails(FakeOutlookItem):
+    def Send(self):
+        raise RuntimeError('Outlook refused the message')
+
+
+class FakeOutlook:
+    def __init__(self, item_class=FakeOutlookItem):
+        self.item_class = item_class
+        self.items = []
+
+    def CreateItem(self, kind):
+        item = self.item_class()
+        self.items.append(item)
+        return item
+
+
+class OutlookComBackendTests(TestCase):
+    """The Outlook backend must map messages onto mail items without needing SMTP."""
+
+    def patched_modules(self, outlook):
+        client = types.ModuleType('win32com.client')
+        client.Dispatch = lambda name: outlook
+        package = types.ModuleType('win32com')
+        package.client = client
+        pythoncom = types.SimpleNamespace(CoInitialize=lambda: None, CoUninitialize=lambda: None)
+        return patch.dict(sys.modules, {'pythoncom': pythoncom, 'win32com': package, 'win32com.client': client})
+
+    def test_sends_each_message_through_the_signed_in_profile(self):
+        outlook = FakeOutlook()
+        message = EmailMessage('Overtime approval needed', 'Body text', None,
+                               ['Andre-Nicolas.Faucon@mubea.com'], cc=['Mariam.Oumalek@mubea.com'])
+        with self.patched_modules(outlook):
+            sent = OutlookComEmailBackend().send_messages([message])
+        self.assertEqual(sent, 1)
+        item = outlook.items[0]
+        self.assertEqual(item.To, 'Andre-Nicolas.Faucon@mubea.com')
+        self.assertEqual(item.CC, 'Mariam.Oumalek@mubea.com')
+        self.assertEqual(item.Subject, 'Overtime approval needed')
+        self.assertEqual(item.Body, 'Body text')
+        self.assertTrue(item.sent)
+
+    def test_prefers_the_html_body_when_one_is_attached(self):
+        outlook = FakeOutlook()
+        message = EmailMultiAlternatives('Subject', 'plain text', None, ['a@mubea.com'])
+        message.attach_alternative('<p>rich text</p>', 'text/html')
+        with self.patched_modules(outlook):
+            OutlookComEmailBackend().send_messages([message])
+        self.assertEqual(outlook.items[0].HTMLBody, '<p>rich text</p>')
+        self.assertEqual(outlook.items[0].Body, '')
+
+    def test_no_messages_needs_no_com_automation(self):
+        with patch.dict(sys.modules, {'pythoncom': None, 'win32com': None, 'win32com.client': None}):
+            self.assertEqual(OutlookComEmailBackend().send_messages([]), 0)
+
+    def test_missing_pywin32_is_reported_as_configuration_error(self):
+        with patch.dict(sys.modules, {'pythoncom': None, 'win32com': None, 'win32com.client': None}):
+            with self.assertRaises(ImproperlyConfigured):
+                OutlookComEmailBackend().send_messages([EmailMessage('S', 'B', None, ['a@mubea.com'])])
+
+    def test_send_failure_propagates_so_the_outbox_can_retry(self):
+        outlook = FakeOutlook(FakeOutlookItemThatFails)
+        message = EmailMessage('S', 'B', None, ['a@mubea.com'])
+        with self.patched_modules(outlook):
+            with self.assertRaises(RuntimeError):
+                OutlookComEmailBackend().send_messages([message])
+        self.assertEqual(outlook.items[0].sent, False)
+
+    def test_silent_failure_reports_nothing_sent(self):
+        outlook = FakeOutlook(FakeOutlookItemThatFails)
+        with self.patched_modules(outlook):
+            sent = OutlookComEmailBackend(fail_silently=True).send_messages([EmailMessage('S', 'B', None, ['a@mubea.com'])])
+        self.assertEqual(sent, 0)
 
 
 from concurrent.futures import ThreadPoolExecutor

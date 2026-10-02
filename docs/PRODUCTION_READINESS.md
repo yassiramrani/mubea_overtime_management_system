@@ -80,6 +80,16 @@ The supplied CI runs backend checks and PostgreSQL tests, builds the frontend, a
 
 Run `python manage.py send_notifications --limit 100` every minute, using the supplied service/timer example or an equivalent scheduler. The command sends due queued messages, uses exponential retry delays, and stops after five failed attempts. Inspect queued/failed messages in Django admin or the admin-only email-log API. Alert on terminal failures and messages queued beyond the normal delivery window. Before go-live, verify every active head/HR manager has a deliverable email and that each required role exists.
 
+Verify the SMTP configuration from the target host before scheduling delivery:
+
+```text
+python manage.py send_test_email --to <operator-address>
+```
+
+This sends a single message through the configured backend and exits non-zero with the server's reason on failure; it does not read or write the notification outbox. `EMAIL_TIMEOUT` bounds a stuck SMTP conversation so a hung server cannot block the scheduled command. Set `EMAIL_USE_TLS=True` for STARTTLS on port 587, or `EMAIL_PORT=465` with `EMAIL_USE_TLS=False` and `EMAIL_USE_SSL=True` for implicit TLS.
+
+The local mail catcher and the Outlook desktop backend are development and prototype aids only; `core.production_settings` refuses to start unless the SMTP backend is selected, so neither can become the production sender by accident.
+
 Delivery is **at least once**: a process crash after SMTP acceptance but before the database commit can cause a duplicate notification. Business actions and exports remain deduplicated independently. No real SMTP messages were sent during automated verification.
 
 ## Monitoring, backup and recovery

@@ -51,6 +51,8 @@ frontend/build/
 frontend/dist/
 frontend/.env.local
 frontend/.env.*.local
+# Generated TypeScript incremental build cache
+*.tsbuildinfo
 
 # Testing
 .pytest_cache/
