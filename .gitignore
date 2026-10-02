@@ -85,3 +85,6 @@ exports/
 # Local verification artifacts and database backups
 .verification/
 *.sqlite3.backup
+
+# Generated document exports; regenerate from the Markdown source
+docs/*.pdf
