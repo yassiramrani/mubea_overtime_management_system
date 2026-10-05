@@ -14,6 +14,7 @@ router.register(r'assignments', views.EmployeeAssignmentViewSet, basename='emplo
 router.register(r'sap-exports', views.SAPExportViewSet, basename='sap-export')
 router.register(r'export-batches', views.ExportBatchViewSet, basename='export-batch')
 router.register(r'email-logs', views.EmailLogViewSet, basename='email-log')
+router.register(r'admin/accounts', views.AdminAccountViewSet, basename='admin-account')
 
 # The API URLs are determined automatically by the router
 urlpatterns = [

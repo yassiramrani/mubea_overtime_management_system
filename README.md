@@ -9,6 +9,8 @@ Manage advance overtime requests from department submission through head-manager
 - Department managers submit requests, search/filter their history, withdraw pending requests with a reason, and view assigned teams.
 - Head managers review requests, estimated costs, and audit history, then approve or reject them.
 - HR managers assign eligible employees, preview explicitly selected exports, download saved batches, and record import outcomes.
+- Administrators get a system console: key figures, the longest-waiting approval queue, notification-outbox health, department workload, and saved export batches. Superusers provision accounts there — create users, assign roles and departments, reset passwords, grant Django administration access, and deactivate leavers.
+- Every signed-in user can change their own password from the workspace header; other sessions for that account are signed out.
 - Workflow changes use explicit audited actions. Generic request/assignment edits and deletion are disabled.
 - Notifications enter a durable outbox; a scheduled management command delivers them.
 

@@ -18,7 +18,7 @@ The development server uses port 3000. The build runs TypeScript checks and writ
 
 ## API configuration
 
-Copy `.env.example` to `.env` only if no local file exists. `VITE_API_URL=/api` is the default API base. Vite's development proxy forwards `/api` to `http://127.0.0.1:8000`.
+Copy `.env.example` to `.env` only if no local file exists. `VITE_API_URL=/api` is the default API base. Vite's development proxy forwards `/api`, `/health` and `/admin/` to `http://127.0.0.1:8000`.
 
 All `VITE_` values are public build-time configuration. Do not add passwords, API secrets, or tokens. Restart Vite after changing configuration.
 
@@ -56,6 +56,9 @@ A deployed reverse proxy must serve the frontend, route `/api/` to Django, and f
 - `/dept-manager`: request creation, estimates, filters, history, withdrawal, and assigned teams.
 - `/head-manager`: review, approval/rejection, department filters, and audit details.
 - `/hr-manager`: employee assignment, explicit export selection, preview, saved batches, and import-result recording.
+- `/administration`: system console for administrators — key figures, longest-waiting approval queue, notification-outbox health, department workload, and saved export batches. Django superusers also manage accounts here: create users, assign roles and departments, reset passwords, grant Django administration access, and deactivate leavers.
+
+Every signed-in workspace header offers **Change password**: it asks for the current password, applies Django's password validators, rotates the API token, and signs out the account's other sessions.
 
 Current login stores expiring API tokens in local storage. App-managed MFA and cookie-based sessions are planned for Phase 2. A compiled frontend alone does not make the public deployment ready.
 

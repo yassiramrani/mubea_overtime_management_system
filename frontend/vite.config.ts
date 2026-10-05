@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
-    proxy: { '/api': process.env.VITE_API_PROXY || 'http://127.0.0.1:8000' },
+    proxy: { '/api': process.env.VITE_API_PROXY || 'http://127.0.0.1:8000', '/health': process.env.VITE_API_PROXY || 'http://127.0.0.1:8000', '/admin/': process.env.VITE_API_PROXY || 'http://127.0.0.1:8000' },
   },
   preview: {
     host: '0.0.0.0',

@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage'
 import DepartmentManagerDashboard from './pages/DepartmentManagerDashboard'
 import HeadManagerDashboard from './pages/HeadManagerDashboard'
 import HRManagerDashboard from './pages/HRManagerDashboard'
+import AdminDashboard from './pages/AdminDashboard'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { LoadError } from './components/Workflow'
 
@@ -25,6 +26,7 @@ export default function App() {
     <Route path="/dept-manager" element={<Protected roles={['dept_manager']}><DepartmentManagerDashboard /></Protected>} />
     <Route path="/head-manager" element={<Protected roles={['head_manager', 'admin']}><HeadManagerDashboard /></Protected>} />
     <Route path="/hr-manager" element={<Protected roles={['hr_manager', 'admin']}><HRManagerDashboard /></Protected>} />
+    <Route path="/administration" element={<Protected roles={['admin']}><AdminDashboard /></Protected>} />
     <Route path="/dashboard/approvals" element={<Navigate to="/head-manager" replace />} />
     <Route path="/dashboard/assignments" element={<Navigate to="/hr-manager" replace />} />
     <Route path="/dashboard/requests" element={<Navigate to="/dept-manager" replace />} />

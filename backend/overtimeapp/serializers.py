@@ -2,8 +2,10 @@
 from rest_framework import serializers
 from decimal import Decimal
 from django.contrib.auth.models import User
-from .models import UserProfile, OvertimeRequest, EmployeeAssignment, SAPExport, EmailLog, AuditEvent, ExportBatch
-from .access import eligible_employees, user_role
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
+from .models import UserProfile, OvertimeRequest, EmployeeAssignment, SAPExport, EmailLog, AuditEvent, ExportBatch, ROLE_CHOICES, DEPARTMENT_CHOICES
+from .access import account_role, eligible_employees, user_role
 
 
 class StrictInputMixin:
@@ -173,3 +175,100 @@ class EmailLogSerializer(serializers.ModelSerializer):
         model = EmailLog
         fields = ['id', 'overtime_request', 'recipient', 'subject', 'email_type', 'sent_at', 'status', 'attempts', 'next_attempt_at', 'delivered_at', 'error_message']
         read_only_fields = fields
+
+
+ACCOUNT_ROLE_CHOICES = [('employee', 'Employee account')] + list(ROLE_CHOICES)
+
+
+class AdminAccountSerializer(serializers.ModelSerializer):
+    """Complete account record, including administrator and deactivated accounts."""
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_active', 'is_staff', 'is_superuser',
+                  'date_joined', 'profile']
+        read_only_fields = fields
+
+    def get_profile(self, obj):
+        try:
+            return {'id': obj.profile.id, 'role': obj.profile.role, 'department': obj.profile.department, 'phone': obj.profile.phone}
+        except UserProfile.DoesNotExist:
+            return None
+
+
+def validate_account_password(value):
+    try:
+        validate_password(value)
+    except DjangoValidationError as error:
+        raise serializers.ValidationError(list(error.messages))
+    return value
+
+
+class AdminAccountCreateSerializer(StrictInputMixin, serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField(required=False, allow_blank=True, default='')
+    first_name = serializers.CharField(max_length=150, required=False, allow_blank=True, default='')
+    last_name = serializers.CharField(max_length=150, required=False, allow_blank=True, default='')
+    role = serializers.ChoiceField(choices=ACCOUNT_ROLE_CHOICES)
+    department = serializers.ChoiceField(choices=DEPARTMENT_CHOICES, required=False, allow_null=True)
+    password = serializers.CharField(trim_whitespace=False)
+    django_admin = serializers.BooleanField(required=False, default=False)
+
+    def validate_username(self, value):
+        if User.objects.filter(username__iexact=value).exists():
+            raise serializers.ValidationError('This username is already taken.')
+        return value
+
+    def validate_password(self, value):
+        return validate_account_password(value)
+
+    def validate(self, attrs):
+        if attrs['role'] == 'dept_manager' and not attrs.get('department'):
+            raise serializers.ValidationError({'department': 'A department manager must have an assigned department.'})
+        if attrs.get('django_admin') and attrs['role'] != 'admin':
+            raise serializers.ValidationError({'django_admin': 'Django administration access requires the Administrator role.'})
+        return attrs
+
+
+class AdminAccountUpdateSerializer(StrictInputMixin, serializers.Serializer):
+    first_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    last_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    role = serializers.ChoiceField(choices=ACCOUNT_ROLE_CHOICES, required=False)
+    department = serializers.ChoiceField(choices=DEPARTMENT_CHOICES, required=False, allow_null=True)
+    is_active = serializers.BooleanField(required=False)
+    django_admin = serializers.BooleanField(required=False)
+    password = serializers.CharField(trim_whitespace=False, required=False)
+
+    def validate_password(self, value):
+        return validate_account_password(value)
+
+    def validate(self, attrs):
+        account = self.context['account']
+        try:
+            current_department = account.profile.department
+        except UserProfile.DoesNotExist:
+            current_department = None
+        role = attrs.get('role', account_role(account))
+        if role == 'dept_manager' and not attrs.get('department', current_department):
+            raise serializers.ValidationError({'department': 'A department manager must have an assigned department.'})
+        if attrs.get('django_admin', account.is_superuser) and role != 'admin':
+            raise serializers.ValidationError({'django_admin': 'Django administration access requires the Administrator role.'})
+        return attrs
+
+
+class PasswordChangeSerializer(StrictInputMixin, serializers.Serializer):
+    current_password = serializers.CharField(trim_whitespace=False)
+    new_password = serializers.CharField(trim_whitespace=False)
+
+    def validate_current_password(self, value):
+        if not self.context['request'].user.check_password(value):
+            raise serializers.ValidationError('The current password is not correct.')
+        return value
+
+    def validate_new_password(self, value):
+        validate_account_password(value)
+        if self.context['request'].user.check_password(value):
+            raise serializers.ValidationError('Choose a password that differs from the current one.')
+        return value

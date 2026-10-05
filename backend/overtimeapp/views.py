@@ -22,9 +22,10 @@ from .serializers import (
     OvertimeRequestApprovalSerializer, WithdrawalSerializer, EmployeeAssignmentSerializer,
     EmployeeAssignmentCreateSerializer, SAPExportSerializer, EmailLogSerializer,
     AuditEventSerializer, ExportSelectionSerializer, ExportBatchSerializer, ExportResultSerializer,
+    AdminAccountSerializer, AdminAccountCreateSerializer, AdminAccountUpdateSerializer,
 )
-from .permissions import IsHeadManagerOrAdmin, IsHRManagerOrAdmin
-from .access import eligible_employees, is_eligible_employee, user_role
+from .permissions import IsHeadManagerOrAdmin, IsHRManagerOrAdmin, IsSuperuser
+from .access import account_role, eligible_employees, is_eligible_employee, user_role
 from .emails import OvertimeEmailService
 
 
@@ -337,3 +338,80 @@ class EmailLogViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return EmailLog.objects.all().order_by('-sent_at') if user_role(self.request.user) == 'admin' else EmailLog.objects.none()
+
+
+class AdminAccountViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """Superuser-only account directory and provisioning for the administration console.
+
+    Deactivation replaces deletion so history and PROTECTed workflow references survive.
+    """
+    permission_classes = [IsAuthenticated, IsSuperuser]
+    http_method_names = ['get', 'post', 'patch', 'head', 'options']
+    queryset = User.objects.select_related('profile').order_by('username')
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username', 'email', 'first_name', 'last_name']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return AdminAccountCreateSerializer
+        if self.action in ['update', 'partial_update']:
+            return AdminAccountUpdateSerializer
+        return AdminAccountSerializer
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        serializer = AdminAccountCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        account = User.objects.create_user(data['username'], data['email'], data['password'],
+                                           first_name=data['first_name'], last_name=data['last_name'])
+        if data['django_admin']:
+            account.is_staff = True
+            account.is_superuser = True
+            account.save(update_fields=['is_staff', 'is_superuser'])
+        if data['role'] != 'employee':
+            UserProfile.objects.create(user=account, role=data['role'],
+                                       department=data.get('department') if data['role'] == 'dept_manager' else None)
+        return Response(AdminAccountSerializer(account).data, status=status.HTTP_201_CREATED)
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        account = User.objects.select_for_update().get(pk=self.get_object().pk)
+        serializer = AdminAccountUpdateSerializer(data=request.data, context={'account': account})
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        role = data.get('role', account_role(account))
+        django_admin = data.get('django_admin', account.is_superuser)
+        is_active = data.get('is_active', account.is_active)
+        if account.pk == request.user.pk:
+            if role != 'admin':
+                raise ValidationError('You cannot change your own role away from Administrator.')
+            if not is_active:
+                raise ValidationError('You cannot deactivate your own account.')
+            if account.is_superuser and not django_admin:
+                raise ValidationError('You cannot remove your own Django administration access.')
+        if account.is_superuser and (not django_admin or not is_active):
+            if not User.objects.filter(is_superuser=True, is_active=True).exclude(pk=account.pk).exists():
+                raise ValidationError('At least one active administrator with Django access must remain.')
+        account.first_name = data.get('first_name', account.first_name)
+        account.last_name = data.get('last_name', account.last_name)
+        account.email = data.get('email', account.email)
+        account.is_active = is_active
+        if django_admin:
+            account.is_staff = True
+            account.is_superuser = True
+        elif account.is_superuser:
+            account.is_staff = False
+            account.is_superuser = False
+        if 'password' in data:
+            account.set_password(data['password'])
+        account.save()
+        if role == 'employee':
+            UserProfile.objects.filter(user=account).delete()
+        else:
+            current_department = account.profile.department if hasattr(account, 'profile') else None
+            UserProfile.objects.update_or_create(user=account, defaults={
+                'role': role,
+                'department': data.get('department', current_department) if role == 'dept_manager' else None,
+            })
+        return Response(AdminAccountSerializer(account).data)

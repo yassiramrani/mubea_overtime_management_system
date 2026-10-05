@@ -28,7 +28,12 @@ class IsDeptManagerOrAdmin(BasePermission):
 
 class IsRequestOwnerOrHeadManager(BasePermission):
     """Permission for request owner or head manager"""
-    
     def has_object_permission(self, request, view, obj):
         role = user_role(request.user)
         return role in ['head_manager', 'admin'] or (role == 'dept_manager' and obj.requester == request.user)
+
+
+class IsSuperuser(BasePermission):
+    """Account provisioning and role changes remain a Django superuser responsibility."""
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.is_superuser)

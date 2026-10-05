@@ -12,6 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
+from .serializers import PasswordChangeSerializer
+
 
 class LoginThrottle(AnonRateThrottle):
     scope = 'login'
@@ -39,6 +41,21 @@ def sign_out(request):
     Token.objects.filter(user=request.user).delete()
     logout(request)
     return Response(status=204)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@transaction.atomic
+def change_password(request):
+    """Rotate the caller's password and token so other sessions are signed out."""
+    serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    user = User.objects.select_for_update().get(pk=request.user.pk)
+    user.set_password(serializer.validated_data['new_password'])
+    user.save(update_fields=['password'])
+    Token.objects.filter(user=user).delete()
+    token = Token.objects.create(user=user)
+    return Response({'token': token.key})
 
 
 def health(request):

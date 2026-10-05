@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     const role = user?.profile?.role
-    if (role) navigate(role === 'dept_manager' ? '/dept-manager' : role === 'hr_manager' ? '/hr-manager' : '/head-manager', { replace: true })
+    if (role) navigate(role === 'admin' ? '/administration' : role === 'dept_manager' ? '/dept-manager' : role === 'hr_manager' ? '/hr-manager' : '/head-manager', { replace: true })
   }, [user, navigate])
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -34,9 +34,9 @@ export default function LoginPage() {
       } else if (userRole === 'hr_manager') {
         navigate('/hr-manager')
       } else if (userRole === 'admin') {
-        navigate('/head-manager')
+        navigate('/administration')
       } else if (loggedInUser.is_superuser) {
-        navigate('/head-manager')
+        navigate('/administration')
       } else {
         throw new Error('This account has no assigned manager role. Contact your administrator.')
       }

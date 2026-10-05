@@ -16,6 +16,7 @@ call_command('migrate', verbosity=0)
 for name, role, department in [('smoke-dept', 'dept_manager', 'logistics'), ('smoke-head', 'head_manager', None), ('smoke-hr', 'hr_manager', None), ('smoke-fixture', 'dept_manager', 'maintenance')]:
     user = User.objects.create_user(name, f'{name}@example.invalid', os.environ['SMOKE_PASSWORD'])
     UserProfile.objects.create(user=user, role=role, department=department)
+User.objects.create_superuser('smoke-admin', 'smoke-admin@example.invalid', os.environ['SMOKE_PASSWORD'])
 for index in range(25):
     User.objects.create_user(f'employee-{index:02}', first_name=f'Employee {index:02}')
 dept = User.objects.get(username='smoke-dept')

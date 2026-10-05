@@ -12,6 +12,8 @@ Current browser authentication is username/password token login, with an eight-h
 
 `manage.py seed_users` creates or updates the project owner's manager accounts and their role profiles. It is idempotent, reads passwords from `SEED_PASSWORD` or a per-account `SEED_PASSWORD_<ACCOUNT>` environment variable, and reports a generated password once if none is supplied. Existing passwords are preserved unless `--reset-passwords` is given. See [Getting started](../GETTING_STARTED.md#3-create-manager-accounts) for the account list.
 
+After that bootstrap, Django superusers provision accounts from the frontend administration console (`/administration`), which uses the `admin/accounts/` routes below, or from Django administration. Passwords on this route pass Django's configured password validators.
+
 ## Main API contracts
 
 Routes below are relative to `/api/`. Lists use role-scoped access and normally return paginated `count`, `next`, `previous`, and `results` fields with 20 records per page.
@@ -20,6 +22,7 @@ Routes below are relative to `/api/`. Lists use role-scoped access and normally 
 |---|---|
 | `POST auth/login/` | Accept `username` and `password`; return `token` |
 | `POST auth/logout/` | Delete the user's token and end the Django session |
+| `POST auth/change-password/` | Rotate the caller's own password with `current_password` and `new_password`; returns a fresh token and signs out other sessions |
 | `GET users/me/` | Current user and effective role |
 | `GET users/?search=...` | HR/admin employee search; eligible accounts only |
 | `GET profiles/my_profile/` | Current stored profile, if present |
@@ -37,6 +40,9 @@ Routes below are relative to `/api/`. Lists use role-scoped access and normally 
 | `GET export-batches/{id}/download/` | Authenticated re-download |
 | `POST export-batches/{id}/record_result/` | Record a human-reported confirmed/failed import outcome |
 | `GET email-logs/` | Application-admin notification log |
+| `GET admin/accounts/?search=...` | Superuser account directory, including administrators and deactivated accounts |
+| `POST admin/accounts/` | Superuser creates an account with `username`, `role`, `password`, optional `department`, names, email and `django_admin` |
+| `PATCH admin/accounts/{id}/` | Superuser updates names, email, `role`, `department`, `is_active`, password or `django_admin` |
 
 An API client sends `Authorization: Token <token>` after login. Do not commit tokens or put credentials into shared command examples.
 
@@ -46,7 +52,7 @@ Assignment writes accept `overtime_request`, `assigned_employees` (user IDs), `e
 
 Export preview/creation accepts `request_ids` and `versions`, where `versions` maps each stringified request ID to its displayed version. A stale version returns HTTP 409: refresh and review before retrying. Exporting saves the CSV; it does not communicate with SAP. Confirmation requires `sap_reference`; failure requires `result_note`. Confirmed results cannot be overwritten.
 
-Generic request/assignment PUT, PATCH, and DELETE are disabled. Workflow records in Django administration are read-only. Only a Django superuser can manage application roles; staff status alone does not grant workflow permissions. Request ordering supports `created_at`, `total_hours`, and `estimated_cost`, with `-` for descending order.
+Generic request/assignment PUT, PATCH, and DELETE are disabled. Workflow records in Django administration are read-only. Only a Django superuser can manage application roles; staff status alone does not grant workflow permissions. Account records are never deleted through the API: deactivation (`is_active: false`) removes access while preserving history and PROTECTed references, and the console prevents an administrator from removing their own access or the last active administrator. Request ordering supports `created_at`, `total_hours`, and `estimated_cost`, with `-` for descending order.
 
 ## Notifications
 

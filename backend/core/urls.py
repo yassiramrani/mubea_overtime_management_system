@@ -18,12 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from overtimeapp.auth_views import LoginView, sign_out, health
+from overtimeapp.auth_views import LoginView, sign_out, health, change_password
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/login/', LoginView.as_view(), name='api_token_login'),
     path('api/auth/logout/', sign_out, name='api_logout'),
+    path('api/auth/change-password/', change_password, name='api_change_password'),
     path('health/', health, name='health'),
     path('api/', include('overtimeapp.urls')),
 ]

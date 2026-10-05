@@ -3,22 +3,14 @@ import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useAuth } from '../context/AuthContext'
 import api, { errorMessage } from '../services/api'
+import { roleLabels, departmentLabels } from '../labels'
+import { ChangePasswordDialog } from './ChangePasswordDialog'
 import type { OvertimeRequest } from '../types'
-
-const roleLabels: Record<string, string> = {
-  dept_manager: 'Department manager',
-  head_manager: 'Head manager',
-  hr_manager: 'HR manager',
-  admin: 'Administrator',
-}
-
-const departmentLabels: Record<string, string> = {
-  logistics: 'Logistics', quality: 'Quality', production: 'Production', maintenance: 'Maintenance', planning: 'Planning',
-}
 
 export function Header({ title, description }: { title: string; description: string }) {
   const { user, logout } = useAuth()
   const [busy, setBusy] = useState(false)
+  const [passwordOpen, setPasswordOpen] = useState(false)
   const signOut = async () => {
     setBusy(true)
     try { await logout() } catch (error) { toast.error(errorMessage(error, 'Unable to sign out. Please try again.')) }
@@ -26,7 +18,7 @@ export function Header({ title, description }: { title: string; description: str
   }
   const role = user?.profile?.role || ''
   const department = user?.profile?.department
-  return <header className="dashboard-header"><div><div className="workspace-marker" aria-label="Current workspace"><span className="workspace-badge">{roleLabels[role] || 'Workspace'}</span>{department && <span>Department: {departmentLabels[department] || department}</span>}</div><h1>{title}</h1><p className="muted">{description}</p></div><div className="inline-actions">{role === 'admin' && <nav aria-label="Workspaces"><Link to="/head-manager">Approvals</Link> <Link to="/hr-manager">HR exports</Link></nav>}<button className="ghost-button" disabled={busy} onClick={signOut}>{busy ? 'Signing out…' : 'Sign out'}</button></div></header>
+  return <><header className="dashboard-header"><div><div className="workspace-marker" aria-label="Current workspace"><span className="workspace-badge">{roleLabels[role] || 'Workspace'}</span>{department && <span>Department: {departmentLabels[department] || department}</span>}</div><h1>{title}</h1><p className="muted">{description}</p></div><div className="inline-actions">{role === 'admin' && <nav aria-label="Workspaces"><Link to="/administration">Overview</Link> <Link to="/head-manager">Approvals</Link> <Link to="/hr-manager">HR exports</Link></nav>}<button className="ghost-button" onClick={() => setPasswordOpen(true)}>Change password</button><button className="ghost-button" disabled={busy} onClick={signOut}>{busy ? 'Signing out…' : 'Sign out'}</button></div></header>{passwordOpen && <ChangePasswordDialog onClose={() => setPasswordOpen(false)} />}</>
 }
 
 export function Pagination({ page, count, next, loading, onPage }: { page: number; count: number; next: boolean; loading: boolean; onPage: (page: number) => void }) {

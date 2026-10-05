@@ -43,6 +43,8 @@ export interface OvertimeRequest {
   reason: string
   start_date: string
   end_date: string
+  created_at: string
+  updated_at: string
   total_hours: string
   hourly_rate: string | null
   estimated_cost: string | null
@@ -63,4 +65,38 @@ export interface ExportBatch {
   status: 'generated' | 'confirmed' | 'failed'
   sap_reference: string
   result_note: string
+}
+
+export interface EmailLog {
+  id: number
+  overtime_request: number | null
+  recipient: string
+  subject: string
+  email_type: string
+  sent_at: string
+  status: 'queued' | 'sent' | 'failed'
+  attempts: number
+  next_attempt_at: string
+  delivered_at: string | null
+  error_message: string
+}
+
+export interface AccountProfile {
+  id: number
+  role: UserRole
+  department?: string | null
+  phone?: string
+}
+
+export interface AdminAccount {
+  id: number
+  username: string
+  email: string
+  first_name: string
+  last_name: string
+  is_active: boolean
+  is_staff: boolean
+  is_superuser: boolean
+  date_joined: string
+  profile: AccountProfile | null
 }

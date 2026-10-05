@@ -408,13 +408,13 @@ class OvertimeWorkflowTests(TestCase):
         self.client.post('/api/requests/', self.request_payload(), format='json')
         item = EmailLog.objects.get()
         self.assertIn('/head-manager', item.body)
-        with patch('overtimeapp.management.commands.send_notifications.send_mail', side_effect=OSError('smtp failure')):
+        with patch('overtimeapp.management.commands.send_notifications.send_notification_mail', side_effect=OSError('smtp failure')):
             call_command('send_notifications', stdout=StringIO())
         item.refresh_from_db()
         self.assertEqual(item.status, 'queued')
         self.assertEqual(item.attempts, 1)
         EmailLog.objects.filter(pk=item.pk).update(next_attempt_at=timezone.now())
-        with patch('overtimeapp.management.commands.send_notifications.send_mail', return_value=1) as send:
+        with patch('overtimeapp.management.commands.send_notifications.send_notification_mail', return_value=1) as send:
             call_command('send_notifications', stdout=StringIO())
             call_command('send_notifications', stdout=StringIO())
             self.assertEqual(send.call_count, 1)
@@ -506,6 +506,165 @@ class SeedUsersCommandTests(TestCase):
         self.assertIn('would create mariam.oumalek (hr_manager)', output)
 
 
+@override_settings(SECURE_SSL_REDIRECT=False, EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class AdminAccountManagementTests(TestCase):
+    """Superuser-only account provisioning for the administration console."""
+
+    def setUp(self):
+        cache.clear()
+        self.client = APIClient()
+        self.admin = User.objects.create_superuser('system', 'system@example.com', 'password123')
+        self.manager = User.objects.create_user('manager', 'manager@example.com', 'password123')
+        UserProfile.objects.create(user=self.manager, role='head_manager')
+
+    def create_account(self, **overrides):
+        payload = {'username': 'new.person', 'email': 'new.person@example.com', 'first_name': 'New', 'last_name': 'Person',
+                   'role': 'employee', 'password': 'Mubea!Pilot#2026'}
+        self.client.force_authenticate(self.admin)
+        return self.client.post('/api/admin/accounts/', payload | overrides, format='json')
+
+    def test_only_superusers_can_manage_accounts(self):
+        actors = [self.manager, User.objects.create_user('staff', is_staff=True), User.objects.create_user('plain')]
+        for actor in actors:
+            self.client.force_authenticate(actor)
+            with self.subTest(actor=actor.username):
+                self.assertEqual(self.client.get('/api/admin/accounts/').status_code, 403)
+                self.assertEqual(self.client.post('/api/admin/accounts/', {'username': 'x', 'role': 'employee',
+                    'password': 'Mubea!Pilot#2026'}, format='json').status_code, 403)
+                self.assertEqual(self.client.patch(f'/api/admin/accounts/{self.manager.pk}/', {'role': 'employee'}, format='json').status_code, 403)
+        self.assertFalse(User.objects.filter(username='x').exists())
+        self.manager.profile.refresh_from_db()
+        self.assertEqual(self.manager.profile.role, 'head_manager')
+
+    def test_creates_employee_and_manager_accounts(self):
+        response = self.create_account()
+        self.assertEqual(response.status_code, 201, response.data)
+        employee = User.objects.get(username='new.person')
+        self.assertTrue(employee.check_password('Mubea!Pilot#2026'))
+        self.assertTrue(employee.is_active)
+        self.assertFalse(employee.is_staff)
+        self.assertFalse(UserProfile.objects.filter(user=employee).exists())
+        self.assertIsNone(response.data['profile'])
+        self.assertEqual(self.create_account(username='dept.lead', role='dept_manager').status_code, 400)
+        response = self.create_account(username='dept.lead', role='dept_manager', department='quality')
+        self.assertEqual(response.status_code, 201, response.data)
+        profile = UserProfile.objects.get(user__username='dept.lead')
+        self.assertEqual((profile.role, profile.department), ('dept_manager', 'quality'))
+        self.assertEqual(self.create_account(username='hr.lead', role='hr_manager', django_admin=True).status_code, 400)
+        response = self.create_account(username='owner2', role='admin', django_admin=True)
+        self.assertEqual(response.status_code, 201, response.data)
+        owner = User.objects.get(username='owner2')
+        self.assertTrue(owner.is_superuser and owner.is_staff)
+        self.assertEqual(owner.profile.role, 'admin')
+        self.assertEqual(self.create_account(username='owner2').status_code, 400)
+        self.assertEqual(self.create_account(username='weakling', password='short').status_code, 400)
+        self.assertEqual(self.create_account(username='ceo', role='ceo').status_code, 400)
+        self.assertEqual(self.create_account(username='extra', is_active=False).status_code, 400)
+
+    def test_lists_all_accounts_including_administrators(self):
+        User.objects.create_user('plain')
+        User.objects.create_superuser('other.admin', 'other.admin@example.com', 'password123')
+        self.client.force_authenticate(self.admin)
+        response = self.client.get('/api/admin/accounts/')
+        self.assertEqual(response.status_code, 200)
+        usernames = {row['username'] for row in response.data['results']}
+        self.assertIn('other.admin', usernames)
+        self.assertIn('plain', usernames)
+        self.assertEqual([row['username'] for row in self.client.get('/api/admin/accounts/', {'search': 'other.admin'}).data['results']], ['other.admin'])
+        self.assertEqual(self.client.get(f'/api/admin/accounts/{self.manager.pk}/').data['profile']['role'], 'head_manager')
+
+    def test_updates_roles_departments_and_deactivation(self):
+        target = User.objects.create_user('target', 'target@example.com', 'password123')
+        self.client.force_authenticate(self.admin)
+        url = f'/api/admin/accounts/{target.pk}/'
+        response = self.client.patch(url, {'role': 'hr_manager', 'first_name': 'Renamed'}, format='json')
+        self.assertEqual(response.status_code, 200, response.data)
+        target.refresh_from_db()
+        self.assertEqual((target.profile.role, target.first_name), ('hr_manager', 'Renamed'))
+        self.assertEqual(self.client.patch(url, {'role': 'dept_manager', 'department': 'planning'}, format='json').status_code, 200)
+        self.assertEqual(UserProfile.objects.get(user=target).department, 'planning')
+        self.assertEqual(self.client.patch(url, {'role': 'dept_manager', 'department': None}, format='json').status_code, 400)
+        self.assertEqual(self.client.patch(url, {'role': 'employee'}, format='json').status_code, 200)
+        self.assertFalse(UserProfile.objects.filter(user=target).exists())
+        self.assertEqual(self.client.patch(url, {'is_active': False}, format='json').status_code, 200)
+        target.refresh_from_db()
+        self.assertFalse(target.is_active)
+        self.assertEqual(self.client.post('/api/auth/login/', {'username': 'target', 'password': 'password123'}, format='json').status_code, 400)
+        self.assertEqual(self.client.patch(url, {'is_active': True}, format='json').status_code, 200)
+
+    def test_password_reset_and_username_immutability(self):
+        target = User.objects.create_user('reset.me', 'reset.me@example.com', 'password123')
+        self.client.force_authenticate(self.admin)
+        url = f'/api/admin/accounts/{target.pk}/'
+        self.assertEqual(self.client.patch(url, {'password': 'short'}, format='json').status_code, 400)
+        self.assertEqual(self.client.patch(url, {'password': 'Mubea!Rotated#2026'}, format='json').status_code, 200)
+        target.refresh_from_db()
+        self.assertTrue(target.check_password('Mubea!Rotated#2026'))
+        self.assertEqual(self.client.patch(url, {'username': 'renamed'}, format='json').status_code, 400)
+
+    def test_administrator_access_cannot_be_removed_from_the_console(self):
+        second = User.objects.create_superuser('second.admin', 'second.admin@example.com', 'password123')
+        self.client.force_authenticate(self.admin)
+        own = f'/api/admin/accounts/{self.admin.pk}/'
+        for payload in [{'is_active': False}, {'django_admin': False}, {'role': 'hr_manager'}]:
+            with self.subTest(payload=payload):
+                self.assertEqual(self.client.patch(own, payload, format='json').status_code, 400)
+        self.client.force_authenticate(second)
+        demoted = self.client.patch(own, {'role': 'employee', 'django_admin': False}, format='json')
+        self.assertEqual(demoted.status_code, 200, demoted.data)
+        self.admin.refresh_from_db()
+        self.assertFalse(self.admin.is_superuser)
+        self.assertFalse(UserProfile.objects.filter(user=self.admin).exists())
+        self.assertTrue(User.objects.filter(is_superuser=True, is_active=True).exists())
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class PasswordChangeTests(TestCase):
+    """Self-service password changes rotate tokens and enforce the configured validators."""
+
+    def setUp(self):
+        cache.clear()
+        self.client = APIClient()
+        self.user = User.objects.create_user('manager', 'manager@example.com', 'password123')
+
+    def login(self, password):
+        return self.client.post('/api/auth/login/', {'username': 'manager', 'password': password}, format='json')
+
+    def test_requires_authentication_and_rejects_bad_input(self):
+        response = self.client.post('/api/auth/change-password/', {'current_password': 'password123', 'new_password': 'Mubea!Rotated#2026'}, format='json')
+        self.assertEqual(response.status_code, 401)
+        self.client.force_authenticate(self.user)
+        for payload in [
+            {'current_password': 'wrong-password', 'new_password': 'Mubea!Rotated#2026'},
+            {'current_password': 'password123', 'new_password': 'short'},
+            {'current_password': 'password123', 'new_password': 'password123'},
+            {'current_password': 'password123'},
+            {'current_password': 'password123', 'new_password': 'Mubea!Rotated#2026', 'role': 'admin'},
+        ]:
+            with self.subTest(payload=payload):
+                self.assertEqual(self.client.post('/api/auth/change-password/', payload, format='json').status_code, 400)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('password123'))
+        self.assertTrue(Token.objects.filter(user=self.user).exists() is False)
+
+    def test_changes_password_and_rotates_the_token(self):
+        old_token = self.login('password123').data['token']
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {old_token}')
+        response = self.client.post('/api/auth/change-password/', {'current_password': 'password123', 'new_password': 'Mubea!Rotated#2026'}, format='json')
+        self.assertEqual(response.status_code, 200, response.data)
+        new_token = response.data['token']
+        self.assertNotEqual(new_token, old_token)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('Mubea!Rotated#2026'))
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {old_token}')
+        self.assertEqual(self.client.get('/api/users/me/').status_code, 401)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {new_token}')
+        self.assertEqual(self.client.get('/api/users/me/').status_code, 200)
+        self.client.credentials()
+        self.assertEqual(self.login('password123').status_code, 400)
+        self.assertEqual(self.login('Mubea!Rotated#2026').status_code, 200)
+
+
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
                    DEFAULT_FROM_EMAIL='overtime@mubea.com')
 class SendTestEmailCommandTests(TestCase):
@@ -525,7 +684,7 @@ class SendTestEmailCommandTests(TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_reports_a_delivery_failure_instead_of_passing(self):
-        with patch('overtimeapp.management.commands.send_test_email.send_mail',
+        with patch('overtimeapp.management.commands.send_test_email.send_notification_mail',
                    side_effect=OSError('connection refused')):
             with self.assertRaises(CommandError) as caught:
                 call_command('send_test_email', '--to', 'Yassir.AMRANI@mubea.com', stdout=StringIO())
@@ -542,7 +701,7 @@ class SendTestEmailCommandTests(TestCase):
                                EMAIL_HOST='smtp.office365.com', EMAIL_PORT=587,
                                EMAIL_USE_TLS=True, EMAIL_HOST_PASSWORD='super-secret'):
             output = StringIO()
-            with patch('overtimeapp.management.commands.send_test_email.send_mail', return_value=1):
+            with patch('overtimeapp.management.commands.send_test_email.send_notification_mail', return_value=1):
                 call_command('send_test_email', '--to', 'Yassir.AMRANI@mubea.com', stdout=output)
         self.assertIn('smtp.office365.com:587', output.getvalue())
         self.assertNotIn('super-secret', output.getvalue())
