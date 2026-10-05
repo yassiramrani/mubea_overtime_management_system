@@ -120,7 +120,11 @@ class NotificationHealthTests(TestCase):
         output, errors = StringIO(), StringIO()
         command = Command(stdout=output, stderr=errors)
         with self.assertRaises(SystemExit) as raised:
-            command.run_from_argv(['manage.py', 'check_notifications', '--json', '--skip-checks'])
+            # Django's CLI wrapper closes every database connection in a finally block.
+            # Inside a TestCase that kills the surrounding test transaction on PostgreSQL,
+            # so the framework cleanup is neutralized; it is not command behaviour.
+            with patch('django.core.management.base.connections.close_all'):
+                command.run_from_argv(['manage.py', 'check_notifications', '--json', '--skip-checks'])
         self.assertEqual(raised.exception.code, 1)
         self.assertFalse(json.loads(output.getvalue())['healthy'])
         self.assertIn('CommandError: Notification queue is unhealthy.', errors.getvalue())
