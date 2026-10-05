@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mubea Overtime Management System — Scope &amp; Roadmap Visual</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#ffffff; --ink:#1c2333; --muted:#5b6472; --line:#dfe3e8;
+    --red:#b91c1c; --red-soft:#fdecec; --blue:#1d4ed8; --blue-soft:#e8eefc;
+    --green:#15803d; --green-soft:#e7f6ec; --amber:#b45309; --amber-soft:#fdf3e0;
+    --gray:#64748b; --gray-soft:#eef1f5; --violet:#6d28d9; --violet-soft:#f1ebfd;
+    --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 22px 80px}
+  /* header */
+  .hero{background:linear-gradient(135deg,#151b2b 0%,#2a1216 55%,#5b1212 100%);color:#fff;border-radius:16px;padding:34px 34px 28px;box-shadow:var(--shadow)}
+  .hero h1{margin:0 0 6px;font-size:29px;letter-spacing:.2px}
+  .hero p{margin:0;color:#e6d9d9;max-width:900px}
+  .hero .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+  .hero .meta span{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:4px 10px;border-radius:999px;font-size:12.5px}
+  /* toc */
+  nav.toc{margin:22px 0 6px;display:flex;flex-wrap:wrap;gap:8px}
+  nav.toc a{font-size:13px;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);padding:5px 11px;border-radius:999px;box-shadow:var(--shadow)}
+  nav.toc a:hover{border-color:var(--red);color:var(--red)}
+  /* sections */
+  section{margin-top:34px}
+  h2{font-size:21px;margin:0 0 14px;padding-left:12px;border-left:5px solid var(--red)}
+  h3{font-size:16px;margin:22px 0 10px}
+  .sub{color:var(--muted);font-size:13.5px;margin:-8px 0 14px;padding-left:17px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow)}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  /* chips */
+  .chip{display:inline-block;font-size:12px;font-weight:600;padding:2.5px 9px;border-radius:999px;white-space:nowrap}
+  .s-done{background:var(--green-soft);color:var(--green);border:1px solid #b7e2c6}
+  .s-part{background:var(--amber-soft);color:var(--amber);border:1px solid #f0d6a8}
+  .s-todo{background:var(--gray-soft);color:var(--gray);border:1px solid #d5dbe3}
+  .s-block{background:var(--red-soft);color:var(--red);border:1px solid #f3c1c1}
+  .s-ext{background:var(--violet-soft);color:var(--violet);border:1px solid #d9c8f7}
+  .s-info{background:var(--blue-soft);color:var(--blue);border:1px solid #c4d4f5}
+  /* legend */
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:6px}
+  .legend .chip{font-weight:600}
+  /* architecture */
+  .stack{display:flex;flex-direction:column;gap:0}
+  .layer{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+  .layer h4{margin:0 0 9px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .inner{display:flex;flex-wrap:wrap;gap:8px}
+  .node{background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13.5px}
+  .node b{display:block;font-size:13.5px}
+  .node small{color:var(--muted);font-size:12px}
+  .arrowrow{display:flex;justify-content:center;align-items:center;gap:10px;padding:7px 0}
+  .arrowrow .glyph{color:var(--red);font-size:15px}
+  .arrowrow .lbl{font-size:12.5px;color:var(--muted);background:var(--gray-soft);border-radius:999px;padding:2px 11px}
+  .ext{border-style:dashed;border-color:#c9a6a6;background:#fffdfd}
+  /* lifecycle */
+  .lifecycle{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
+  .lc-node{flex:1 1 150px;border-radius:11px;padding:12px 12px 10px;border:1.5px solid var(--line);background:#fbfcfe;position:relative}
+  .lc-node h5{margin:0 0 4px;font-size:14px}
+  .lc-node small{color:var(--muted);display:block;font-size:12px}
+  .lc-arrow{display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:74px;gap:3px}
+  .lc-arrow .a{color:var(--red);font-size:16px;font-weight:700}
+  .lc-arrow .t{font-size:11.5px;color:var(--muted);text-align:center}
+  .state-pending{border-top:4px solid #d97706}
+  .state-approved{border-top:4px solid #15803d}
+  .state-derived{border-top:4px solid #1d4ed8}
+  .state-end{border-top:4px solid #6d28d9}
+  /* tables */
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);font-size:13.5px}
+  thead th{background:#f0f2f5;text-align:left;padding:9px 12px;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+  td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}
+  tbody tr:hover{background:#fafbfc}
+  .ok{color:var(--green);font-weight:700}
+  .no{color:#c0c6cf;font-weight:700}
+  .mono{font-family:Consolas,ui-monospace,monospace;font-size:12.5px}
+  /* checklists */
+  ul.check{list-style:none;margin:8px 0 0;padding:0}
+  ul.check li{padding:5px 0 5px 26px;position:relative;border-top:1px dashed #edf0f3;font-size:13.5px}
+  ul.check li:first-child{border-top:0}
+  ul.check li::before{position:absolute;left:2px;top:5px;font-size:13px}
+  li.c-done::before{content:"✓";color:var(--green);font-weight:700}
+  li.c-todo::before{content:"○";color:var(--gray)}
+  li.c-block::before{content:"⛔";font-size:11px}
+  li.c-part::before{content:"◐";color:var(--amber)}
+  /* timeline */
+  .timeline{margin-top:8px}
+  .stage{position:relative;margin:0 0 16px 26px;padding:16px 18px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+  .stage::before{content:"";position:absolute;left:-26px;top:22px;width:13px;height:13px;border-radius:50%;background:var(--gray);border:3px solid var(--bg)}
+  .stage.done::before{background:var(--green)}
+  .stage.part::before{background:var(--amber)}
+  .stage.block::before{background:var(--red)}
+  .stage::after{content:"";position:absolute;left:-20px;top:35px;bottom:-16px;width:2px;background:var(--line)}
+  .stage:last-child::after{display:none}
+  .stage-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:6px}
+  .stage-head h3{margin:0;font-size:15.5px}
+  .stage .goal{color:var(--muted);font-size:13px;margin:0 0 6px}
+  .deps{font-size:12px;color:var(--muted);margin-top:8px}
+  .deps .chip{margin-right:4px}
+  /* callouts */
+  .callout{border-radius:11px;padding:13px 16px;font-size:13.5px;border:1px solid;margin-top:14px}
+  .callout.warn{background:var(--red-soft);border-color:#f3c1c1;color:#7f1d1d}
+  .callout.info{background:var(--blue-soft);border-color:#c4d4f5;color:#1e3a8a}
+  .callout.good{background:var(--green-soft);border-color:#b7e2c6;color:#14532d}
+  .callout b{display:block;margin-bottom:3px}
+  /* flow chain */
+  .chain{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+  .chain .step{background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:10px 13px;font-size:13.5px;box-shadow:var(--shadow)}
+  .chain .step b{display:block;font-size:13.5px}
+  .chain .step small{color:var(--muted);font-size:12px}
+  .chain .sep{color:var(--red);font-weight:700;font-size:17px}
+  .chain .parallel{border-style:dashed;border-color:#c4d4f5;background:var(--blue-soft)}
+  /* misc */
+  .kv{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .kv .chip{font-weight:600}
+  code{background:#f0f2f5;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-family:Consolas,ui-monospace,monospace;font-size:12.5px}
+  .muted{color:var(--muted)}
+  footer{margin-top:44px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:16px}
+  @media print{
+    body{background:#fff}
+    .hero{background:#111;color:#fff}
+    nav.toc{display:none}
+    .card,.stage,table,.layer{box-shadow:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ══════════════════════ HERO ══════════════════════ -->
+<header class="hero">
+  <h1>Mubea Overtime Management System</h1>
+  <p>Full scope map &amp; remaining-work roadmap — advance overtime requests: submission by department managers, approval by head managers, employee assignment by HR, and a reviewed CSV handoff for SAP.</p>
+  <div class="meta">
+    <span>Django 5.2 · DRF · React 18 · TypeScript · Vite · PostgreSQL/SQLite</span>
+    <span>State: Phase 1 workflow delivered — <b>not production-ready</b></span>
+    <span>Roadmap updated 5 Oct 2026 · admin console, account management &amp; self-service password change</span>
+    <span>Sources: PROJECT_STATUS, REMAINING_WORK, PRODUCTION_READINESS, VERIFICATION, SETUP_CHECKLIST</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#scope">1 · Scope &amp; boundaries</a>
+  <a href="#arch">2 · Architecture</a>
+  <a href="#roles">3 · Roles &amp; permissions</a>
+  <a href="#flow">4 · Request lifecycle</a>
+  <a href="#data">5 · Data model</a>
+  <a href="#done">6 · Delivered scope</a>
+  <a href="#todo">7 · Remaining work (stages)</a>
+  <a href="#blocked">8 · Blocked on decisions</a>
+  <a href="#order">9 · Recommended order</a>
+  <a href="#risk">10 · Risks &amp; caveats</a>
+  <a href="#files">11 · Key files</a>
+</nav>
+
+<!-- ══════════════════════ 1. SCOPE ══════════════════════ -->
+<section id="scope">
+  <h2>1 · What this system is — and what it is not</h2>
+  <p class="sub">The confirmed business workflow is <b>approval of overtime in advance</b> — not payment for actual hours worked.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">✅ In scope (this release)</h3>
+      <ul class="check">
+        <li class="c-done">Advance OT request: submit → approve / reject / withdraw</li>
+        <li class="c-done">Head-manager review with estimated cost and full audit history</li>
+        <li class="c-done">HR employee assignment (eligible application accounts)</li>
+        <li class="c-done">Saved, checksummed review CSV (<code>approval-review-v1</code>) with preview, download and import-result recording</li>
+        <li class="c-done">Durable email outbox with scheduled delivery command</li>
+        <li class="c-done">Role-scoped APIs, audit trail, concurrency guards</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">⛔ Explicitly out of scope (deferred)</h3>
+      <ul class="check">
+        <li class="c-block">Direct SAP integration — CSV is a <b>human-reviewed handoff</b>; no import adapter exists</li>
+        <li class="c-block">Actual-hours / payroll processing</li>
+        <li class="c-block">Separate personnel directory (assignments use app user accounts)</li>
+        <li class="c-block">Drafts, amendments of approved requests, cancellation</li>
+        <li class="c-block">Per-day/per-employee allocations, shifts, breaks, overlap checks</li>
+        <li class="c-block">SSO, delegated approvers, reminders/escalations, reporting</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout info"><b>Unit caveat carried forward</b>
+    <code>total_hours</code> means <b>employee-hours</b> (5 people × 3 h = 15). HR sign-off on this interpretation is required before importing legacy records — existing quantities were <b>not</b> multiplied or reinterpreted.</div>
+</section>
+
+<!-- ══════════════════════ 2. ARCHITECTURE ══════════════════════ -->
+<section id="arch">
+  <h2>2 · Architecture — every layer</h2>
+  <p class="sub">Three role dashboards over one REST API; workflow writes are transactional and audited; notifications are queued, never sent inline.</p>
+  <div class="stack">
+
+    <div class="layer">
+      <h4>Users</h4>
+      <div class="inner">
+        <div class="node"><b>Department Manager</b><small>submits &amp; withdraws own requests</small></div>
+        <div class="node"><b>Head Manager</b><small>approves / rejects, sees all</small></div>
+        <div class="node"><b>HR Manager</b><small>assigns employees, exports CSV</small></div>
+        <div class="node"><b>Admin (superuser)</b><small>full visibility + Django admin</small></div>
+      </div>
+    </div>
+    <div class="arrowrow"><span class="glyph">▼</span><span class="lbl">HTTPS · JSON · token auth (8 h) + login throttling</span></div>
+
+    <div class="layer">
+      <h4>Frontend — React 18 + TypeScript SPA (Vite)</h4>
+      <div class="inner">
+        <div class="node"><b>/login</b><small>no prefilled credentials</small></div>
+        <div class="node"><b>/dept-manager</b><small>submit · filters/search · history · withdraw · assigned teams</small></div>
+        <div class="node"><b>/head-manager</b><small>review queue · reason · cost · audit · decide</small></div>
+        <div class="node"><b>/hr-manager</b><small>assignment · export preview/download · import result</small></div>
+        <div class="node"><b>/administration</b><small>admin console · KPIs · queue · outbox · workload · exports · accounts</small></div>
+        <div class="node"><b>Change password</b><small>every workspace header · rotates the API token</small></div>
+        <div class="node"><b>Route guards</b><small>role-gated &lt;Protected&gt; routes</small></div>
+      </div>
+    </div>
+    <div class="arrowrow"><span class="glyph">▼</span><span class="lbl">/api/* · paginated · filtered · ordered · Vite proxy in dev</span></div>
+
+    <div class="layer">
+      <h4>Backend — Django REST Framework</h4>
+      <div class="inner">
+        <div class="node mono">/api/requests/ + approve · reject · withdraw · history</div>
+        <div class="node mono">/api/assignments/</div>
+        <div class="node mono">/api/sap-exports/ + preview · export_to_csv</div>
+        <div class="node mono">/api/export-batches/ + download · record_result</div>
+        <div class="node mono">/api/users/ me · /api/profiles/</div>
+        <div class="node mono">/api/email-logs/ (admin only)</div>
+        <div class="node mono">/api/admin/accounts/ (superuser)</div>
+        <div class="node mono">/api/auth/ login · logout · change-password</div>
+        <div class="node mono">/health/ readiness</div>
+      </div>
+    </div>
+    <div class="arrowrow"><span class="glyph">▼</span><span class="lbl">transaction.atomic · select_for_update · version guards · audit() on every transition</span></div>
+
+    <div class="layer">
+      <h4>Domain logic in one app — <span class="mono">overtimeapp/</span></h4>
+      <div class="inner">
+        <div class="node"><b>Role scoping</b><small>dept=own · HR=approved only · head/admin=all</small></div>
+        <div class="node"><b>Transition guards</b><small>pending-only decisions · requester ≠ approver · 409 conflicts</small></div>
+        <div class="node"><b>Export validation</b><small>attribution · version · assignment complete · eligibility · duplicate lock</small></div>
+        <div class="node"><b>Audit feed</b><small>append-only, actor snapshot, JSON details</small></div>
+        <div class="node"><b>Outbox writes</b><small>one row per recipient inside the same transaction</small></div>
+        <div class="node"><b>Account guards</b><small>superuser-only API · role/department rules · self &amp; last-admin lockout protection</small></div>
+      </div>
+    </div>
+    <div class="arrowrow"><span class="glyph">▼</span></div>
+
+    <div class="grid g2">
+      <div class="layer">
+        <h4>Data stores</h4>
+        <div class="inner">
+          <div class="node"><b>PostgreSQL (prod) / SQLite (dev)</b><small>requests · assignments · exports · audit · users</small></div>
+          <div class="node"><b>EmailLog outbox table</b><small>attempts · next_attempt_at · delivered_at</small></div>
+          <div class="node"><b>ExportBatch.csv_content</b><small>persisted + SHA-256 checksum, immutable once confirmed</small></div>
+        </div>
+      </div>
+      <div class="layer">
+        <h4>Notification delivery + external</h4>
+        <div class="inner">
+          <div class="node"><b>send_notifications</b><small>must be scheduled; production delivery disabled until explicit opt-in after sender verification</small></div>
+          <div class="node"><b>check_notifications</b><small>read-only queue age/failure checks; JSON + nonzero exit for monitoring</small></div>
+          <div class="node"><b>Senders</b><small>SMTP (prod) · Outlook desktop (Windows dev) · local capture (127.0.0.1 only)</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="arrowrow"><span class="glyph">▼</span></div>
+    <div class="layer ext">
+      <h4>External systems</h4>
+      <div class="inner">
+        <div class="node"><b>Corporate mail</b><small>recipients: head managers, HR, requester</small></div>
+        <div class="node"><b>SAP — manual only</b><small>CSV download → human import → outcome recorded back via <span class="mono">record_result</span>. No automated interface.</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ 3. ROLES ══════════════════════ -->
+<section id="roles">
+  <h2>3 · Roles &amp; permissions (as implemented)</h2>
+  <p class="sub">Enforced in two layers: DRF permission classes + queryset scoping, so list, detail and action endpoints all respect the same rules.</p>
+  <table>
+    <thead><tr><th>Capability</th><th style="width:14%">Dept Manager</th><th style="width:14%">Head Manager</th><th style="width:14%">HR Manager</th><th style="width:12%">Admin</th></tr></thead>
+    <tbody>
+      <tr><td>Submit OT request</td><td class="ok">✓</td><td class="no">—</td><td class="no">—</td><td class="ok">✓</td></tr>
+      <tr><td>View requests</td><td>Own only</td><td>All</td><td>Approved only</td><td>All</td></tr>
+      <tr><td>Approve / Reject <span class="muted">(never own request)</span></td><td class="no">—</td><td class="ok">✓</td><td class="no">—</td><td class="ok">✓</td></tr>
+      <tr><td>Withdraw own pending request <span class="muted">(reason required)</span></td><td class="ok">✓</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+      <tr><td>Assign employees <span class="muted">(eligible, active, non-admin accounts)</span></td><td class="no">—</td><td class="no">—</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+      <tr><td>Preview / download export CSV</td><td class="no">—</td><td class="no">—</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+      <tr><td>Record SAP import result</td><td class="no">—</td><td class="no">—</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+      <tr><td>View audit history</td><td>Own requests</td><td>All</td><td>Visible requests</td><td>All</td></tr>
+      <tr><td>Email-log API</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="ok">✓</td></tr>
+      <tr><td>Manage accounts &amp; roles <span class="muted">(superusers only)</span></td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="ok">✓</td></tr>
+      <tr><td>Change own password</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td></tr>
+      <tr><td>Django admin <span class="muted">(workflow &amp; audit models are read-only)</span></td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="ok">✓</td></tr>
+    </tbody>
+  </table>
+  <div class="callout info" style="margin-top:12px"><b>Superuser mapping</b> Django superusers are treated as <code>admin</code>; any missing <code>UserProfile</code> resolves to no role and no access.</div>
+</section>
+
+<!-- ══════════════════════ 4. LIFECYCLE ══════════════════════ -->
+<section id="flow">
+  <h2>4 · Request lifecycle — happy path + off-ramps</h2>
+  <p class="sub">Only <b>pending / approved / rejected / withdrawn</b> are request statuses. Assignment and export add <b>related records</b>, they do not change the request status.</p>
+
+  <div class="lifecycle">
+    <div class="lc-node state-pending"><h5>pending</h5><small>created by dept manager</small><small class="muted" style="margin-top:5px">+ AuditEvent “submitted” + outbox mail to head managers</small></div>
+    <div class="lc-arrow"><span class="a">→</span><span class="t">approve<br>head mgr</span></div>
+    <div class="lc-node state-approved"><h5>approved</h5><small>approved_by + approval_date set</small><small class="muted" style="margin-top:5px">+ mail to HR &amp; requester</small></div>
+    <div class="lc-arrow"><span class="a">→</span><span class="t">assign<br>HR</span></div>
+    <div class="lc-node state-derived"><h5>assignment completed</h5><small>≥1 eligible employee · version checked</small><small class="muted" style="margin-top:5px">request frozen after export</small></div>
+    <div class="lc-arrow"><span class="a">→</span><span class="t">export<br>HR</span></div>
+    <div class="lc-node state-derived"><h5>ExportBatch: generated</h5><small>request_ids + versions validated · SHA-256 saved</small><small class="muted" style="margin-top:5px">SAPExport lock rows created</small></div>
+    <div class="lc-arrow"><span class="a">→</span><span class="t">record<br>result</span></div>
+    <div class="lc-node state-end"><h5>confirmed / failed</h5><small>SAP reference + note recorded</small><small class="muted" style="margin-top:5px">confirmed is final — cannot be overwritten</small></div>
+  </div>
+
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card" style="border-left:4px solid #dc2626">
+      <h3 style="margin-top:0">Off-ramp: rejected</h3>
+      <p class="muted" style="margin:0">From <b>pending</b> only · head manager/admin · <b>reason required</b> · notifies requester. Versions +1.</p>
+    </div>
+    <div class="card" style="border-left:4px solid #b45309">
+      <h3 style="margin-top:0">Off-ramp: withdrawn</h3>
+      <p class="muted" style="margin:0">From <b>pending</b> only · requester only · <b>reason required</b> · no email sent. Versions +1.</p>
+    </div>
+  </div>
+
+  <h3>Transition guards — what makes each step safe</h3>
+  <table>
+    <thead><tr><th>Step</th><th>Endpoint</th><th>Who</th><th>Guards</th><th>Side effects</th></tr></thead>
+    <tbody>
+      <tr><td>Submit</td><td class="mono">POST /api/requests/</td><td>dept mgr / admin</td><td>workflow fields injected into body are rejected; hours ≥ 0.5; end ≥ start</td><td>pending + audit snapshot + outbox mail</td></tr>
+      <tr><td>Approve</td><td class="mono">PATCH …/approve/</td><td>head / admin, not requester</td><td>pending only; empty body; row lock + conditional <span class="mono">UPDATE … WHERE version=N</span></td><td>approved + attribution; version +1; mail to HR &amp; requester</td></tr>
+      <tr><td>Reject</td><td class="mono">PATCH …/reject/</td><td>head / admin, not requester</td><td>pending only; rejection reason required; same lock/version guard</td><td>rejected + date/reason; version +1; mail to requester</td></tr>
+      <tr><td>Withdraw</td><td class="mono">POST …/withdraw/</td><td>requester only</td><td>pending only; reason required</td><td>withdrawn; version +1</td></tr>
+      <tr><td>Assign</td><td class="mono">POST /api/assignments/</td><td>HR / admin</td><td>request approved; <span class="mono">expected_version</span> match; ≥1 unique employee if required; blocked once exported</td><td>assignment completed; version +1; mail to requester</td></tr>
+      <tr><td>Preview export</td><td class="mono">POST /api/sap-exports/preview/</td><td>HR / admin</td><td>approved + attribution present; version match; not already exported; assignment complete; every assignee still eligible</td><td>read-only CSV text + notice</td></tr>
+      <tr><td>Generate export</td><td class="mono">POST …/export_to_csv/</td><td>HR / admin</td><td>same as preview <b>plus row locks</b>; duplicate export refused</td><td>ExportBatch + per-request lock; audit per request</td></tr>
+      <tr><td>Record result</td><td class="mono">POST …/record_result/</td><td>HR / admin</td><td>batch not already confirmed</td><td>confirmed / failed + SAP ref; audit per request</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout good"><b>Why the guards matter</b>
+    Concurrency is the core design: PostgreSQL row locks <i>and</i> versioned conditional updates mean two managers racing on the same request (approve vs reject, or export vs export) get exactly one winner and a 409 for the loser — verified by 3 dedicated PostgreSQL tests in CI.</div>
+  <div class="callout warn"><b>Legacy data gate</b>
+    Approved records lacking approver/date are <b>blocked from export</b> until reconciled against authoritative documents — they must not be silently “fixed”.</div>
+</section>
+
+<!-- ══════════════════════ 5. DATA MODEL ══════════════════════ -->
+<section id="data">
+  <h2>5 · Data model — 7 entities</h2>
+  <p class="sub">Append-only audit; immutable exports; PROTECT on requester to preserve history.</p>
+  <div class="grid g3">
+    <div class="card"><h3 style="margin-top:0">User + UserProfile</h3><p class="muted" style="font-size:13px;margin:0"><b>role</b> (dept/head/hr/admin) · <b>department</b> (logistics, quality, production, maintenance, planning) · phone.<br>Eligible employee = active, non-staff, non-superuser, non-admin.</p></div>
+    <div class="card"><h3 style="margin-top:0">OvertimeRequest</h3><p class="muted" style="font-size:13px;margin:0"><span class="mono">request_id = OT-&lt;DEPT&gt;-&lt;uuid&gt;</span> · title/description/reason · start/end · <b>total_hours</b> (≥ 0.5) · hourly_rate · <b>estimated_cost computed in save()</b> · approval/rejection fields · <b>version</b> (optimistic lock).<br>DB check constraints: dates ordered, positive hours, non-negative rate.</p></div>
+    <div class="card"><h3 style="margin-top:0">EmployeeAssignment <span class="chip s-info">1:1 request</span></h3><p class="muted" style="font-size:13px;margin:0">assigned_by · status (pending/completed/cancelled) · M2M assigned_employees · notes.</p></div>
+    <div class="card"><h3 style="margin-top:0">SAPExport <span class="chip s-info">1:1 request</span></h3><p class="muted" style="font-size:13px;margin:0">Freezes an exported request · links to batch · status mirrors import result · SAP reference.</p></div>
+    <div class="card"><h3 style="margin-top:0">ExportBatch</h3><p class="muted" style="font-size:13px;margin:0">UUID pk · csv_content · <b>SHA-256 checksum</b> · row_count · format <span class="mono">approval-review-v1</span> · status generated/confirmed/failed · confirmed_by/at.</p></div>
+    <div class="card"><h3 style="margin-top:0">AuditEvent</h3><p class="muted" style="font-size:13px;margin:0">Append-only: request · actor + actor_name snapshot · action · JSON details · timestamp. Powers the “history” endpoint and dashboards.</p></div>
+    <div class="card"><h3 style="margin-top:0">EmailLog (outbox)</h3><p class="muted" style="font-size:13px;margin:0">recipient · saved subject/text/HTML · email_type · attempts · next_attempt_at (exponential backoff) · delivered_at · status. <b>5 failed attempts → terminal failure.</b> Queue checks detect failed, stale, exhausted and empty-body rows.</p></div>
+    <div class="card" style="background:#fbfcfe"><h3 style="margin-top:0">Identity note</h3><p class="muted" style="font-size:13px;margin:0">Assignments reference application user accounts — <b>no personnel directory / SAP personnel IDs yet</b> (future work).</p></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ 6. DELIVERED ══════════════════════ -->
+<section id="done">
+  <h2>6 · Delivered scope (what exists today) <span class="chip s-done">Phase 1</span></h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">Workflow &amp; API</h3>
+      <ul class="check">
+        <li class="c-done">Explicit audited actions only — generic PUT/PATCH/DELETE on requests &amp; assignments disabled</li>
+        <li class="c-done">Transactional decisions / assignments / audit / outbox writes</li>
+        <li class="c-done">Versioned concurrency (409 conflicts) on decide, assign, export</li>
+        <li class="c-done">Withdrawal with reason; rejection reason required</li>
+        <li class="c-done">Audit history endpoint with submitted snapshot</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Export pipeline</h3>
+      <ul class="check">
+        <li class="c-done">Explicit selection with per-request version check (stale queue → refresh)</li>
+        <li class="c-done">Validation preview before commit; friendly per-request error messages</li>
+        <li class="c-done">Persisted batch + checksum · immutable confirmed result · authenticated re-download</li>
+        <li class="c-done">Duplicate export prevention via SAPExport lock</li>
+        <li class="c-done">CSV formula-injection escaping on text cells (<code>csv_cell</code>)</li>
+        <li class="c-done">Legacy approvals without attribution stay blocked</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Security &amp; access</h3>
+      <ul class="check">
+        <li class="c-done">Role scoping at queryset level + permission classes per action</li>
+        <li class="c-done">Requester can never approve/reject own request</li>
+        <li class="c-done">Login throttling · 8-hour tokens · server-side logout</li>
+        <li class="c-done">Injected approval/cost/requester fields rejected on create</li>
+        <li class="c-done">Workflow &amp; audit models read-only in Django admin</li>
+        <li class="c-done">Eligibility re-checked at assign and export time</li>
+        <li class="c-done">Superuser-only account API: Django password validators, deactivation instead of deletion, self- and last-admin lockout guards</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Notifications</h3>
+      <ul class="check">
+        <li class="c-done">Durable outbox — sending never blocks the request API</li>
+        <li class="c-done">Bounded retries (5 attempts, exponential backoff)</li>
+        <li class="c-done">Commands: <span class="mono">send_notifications</span>, <span class="mono">send_test_email</span>, <span class="mono">check_notifications</span>, <span class="mono">seed_users</span>, <span class="mono">check_legacy_requests</span></li>
+        <li class="c-done">Escaped HTML + plain-text snapshots for every notification type</li>
+        <li class="c-done">Optional test allowlist with TEST / DEMO markers; production delivery defaults to disabled</li>
+        <li class="c-done">Two verified dev senders: Outlook desktop (Windows) + local capture</li>
+        <li class="c-done">Demo evidence: 4 captured emails + workflow video in repo</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Frontend</h3>
+      <ul class="check">
+        <li class="c-done">Login + 4 workspaces (3 role dashboards + admin console), paginated, search/filter/order</li>
+        <li class="c-done">Administration console: key figures, approval queue, outbox health, department workload, export batches, and superuser account &amp; role management</li>
+        <li class="c-done">Change password from any workspace header; rotating it signs out the account's other sessions</li>
+        <li class="c-done">Assignment repair (remove any selected employee), export selection across pages</li>
+        <li class="c-done">Cost &amp; justification on approval screen; reasons &amp; assigned teams on dept screen</li>
+        <li class="c-done">Export history with download + import-result recording on HR screen</li>
+        <li class="c-done">Protected routes wait for auth; relative API URLs + Vite proxy</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Verification &amp; ops scaffolding</h3>
+      <ul class="check">
+        <li class="c-done">5 Oct: 88 backend tests run — 85 passed, 3 PostgreSQL-only concurrency tests skipped</li>
+        <li class="c-done">Historical remote CI on <span class="mono">main</span> green on Linux; current Stage 1 changes not checked remotely</li>
+        <li class="c-done">Playwright browser workflow: dept → head → HR → admin console → account create/deactivate → password rotation (isolated temp DB, fake users, in-memory email)</li>
+        <li class="c-done">Production settings fail fast; nginx / systemd / backup examples; <span class="mono">/health/</span></li>
+        <li class="c-done">Security reviewer pass: 2 edge cases found &amp; fixed with regression tests</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout warn"><b>Read this before any demo</b>
+    Test counts and “complete” claims from earlier documents are historical. [VERIFICATION.md] is the only source of what actually passed, and it records limits: no real SMTP mail sent during automated runs, no Docker/staging verified, no production deployment performed.</div>
+</section>
+
+<!-- ══════════════════════ 7. REMAINING ══════════════════════ -->
+<section id="todo">
+  <h2>7 · What still has to be done — stage by stage</h2>
+  <p class="sub">Legend:
+    <span class="chip s-done">done</span>
+    <span class="chip s-part">partial</span>
+    <span class="chip s-todo">not started</span>
+    <span class="chip s-block">blocked (external)</span>
+  </p>
+
+  <div class="timeline">
+    <!-- STAGE 0 -->
+    <div class="stage done">
+      <div class="stage-head"><h3>Stage 0 — Landed, 2 Oct 2026</h3><span class="chip s-done">✓ complete</span></div>
+      <p class="goal">Close out Phase 1 and land the notification work.</p>
+      <ul class="check">
+        <li class="c-done">Notification work committed &amp; pushed (<span class="mono">9ae43e8</span>, <span class="mono">c3a030b</span>); CI green on Linux, both jobs</li>
+        <li class="c-done">Frontend build + browser smoke pass</li>
+        <li class="c-done">Dev database + 5 manager accounts provisioned (development only)</li>
+        <li class="c-done">Stale docs corrected</li>
+      </ul>
+    </div>
+
+    <!-- STAGE 1 -->
+    <div class="stage part">
+      <div class="stage-head"><h3>Stage 1 — Notifications, finished properly</h3><span class="chip s-part">code progressed — rollout pending</span></div>
+      <p class="goal">Make delivery production-grade and automatic.</p>
+      <ul class="check">
+        <li class="c-block"><b>1.1 Decide the production sender</b> — Microsoft Graph app-only <i>or</i> internal relay <span class="chip s-ext">owner: IT</span></li>
+        <li class="c-part"><b>1.2 Schedule <span class="mono">send_notifications</span> every minute</b> — timer example ready; production delivery disabled until explicit opt-in; nothing installed <span class="chip s-block">depends 1.1</span></li>
+        <li class="c-done"><b>1.3 Keep Outlook backend as Windows/dev fallback</b> — already selected locally; plain text and HTML tested with mocked COM; production refuses it</li>
+        <li class="c-done"><b>1.4 HTML email templates</b> — saved, escaped HTML + plain-text snapshots for submission, approval, rejection and assignment</li>
+        <li class="c-done"><b>1.5 Optional redirect / test-mode safeguard</b> — allowlist replaces recipients at delivery; subject/text/HTML marked TEST / DEMO</li>
+        <li class="c-part"><b>1.6 Alert on failed emails &amp; stale queue rows</b> — <span class="mono">check_notifications --json</span> and timer examples ready; external routing and installation pending</li>
+      </ul>
+      <div class="callout info" style="margin-top:10px"><b>Easy local path while IT decides</b>
+        Signed-in Outlook desktop remains the Windows testing path. Local demo mode redirects mail to the configured sender address; restart a running backend to load it. <a href="../.verification/stage1/index.html">Open five fictional email previews</a> · <a href="NOTIFICATIONS.md">Setup and activation guide</a>. Previews use in-memory SQLite and local mail only; no real messages are sent.</div>
+      <div class="callout warn" style="margin-top:10px"><b>Production activation and demo caveats</b>
+        After 5 failed attempts a message remains <span class="mono">failed</span>. Queue checks expose failures; install monitoring and route alerts. Verify the sender before enabling production delivery/scheduling. Redirected demo rows become <span class="mono">sent</span> and are never replayed to original recipients — use fictional data in a disposable database.</div>
+    </div>
+
+    <!-- STAGE 2 -->
+    <div class="stage block">
+      <div class="stage-head"><h3>Stage 2 — Authentication (Phase 2)</h3><span class="chip s-todo">not started</span><span class="chip s-ext">gate on public exposure</span></div>
+      <p class="goal">Replace local-storage tokens with verified-identity sessions.</p>
+      <ul class="check">
+        <li class="c-todo">Verified email enrollment for accounts</li>
+        <li class="c-todo">Authenticator MFA (+ MFA protection for API/admin)</li>
+        <li class="c-todo">Account recovery flow <span class="muted">(superusers can already reset passwords from the console; every user can change their own password)</span></li>
+        <li class="c-todo">Migration from local-storage tokens → secure cookie sessions</li>
+        <li class="c-block">MFA/SSO requirements decision <span class="chip s-ext">owner: IT</span></li>
+      </ul>
+    </div>
+
+    <!-- STAGE 3 -->
+    <div class="stage part">
+      <div class="stage-head"><h3>Stage 3 — Staging &amp; CI (Phase 3)</h3><span class="chip s-part">CI exists; staging missing</span></div>
+      <p class="goal">Make the app reproducibly deployable before touching production.</p>
+      <ul class="check">
+        <li class="c-todo">Portable containers (Dockerfile/compose) for backend + frontend</li>
+        <li class="c-todo">Reproducible staging environment</li>
+        <li class="c-todo">Browser checks against the compiled app in staging</li>
+        <li class="c-todo">Readiness monitoring (queue age, error rates, latency, Redis/PG availability)</li>
+        <li class="c-done">Remote CI already runs backend checks, PostgreSQL tests, frontend build &amp; smoke</li>
+      </ul>
+    </div>
+
+    <!-- STAGE 4 -->
+    <div class="stage block">
+      <div class="stage-head"><h3>Stage 4 — Business acceptance (Phase 4)</h3><span class="chip s-todo">not started</span><span class="chip s-ext">cheapest, biggest unblocking effect</span></div>
+      <p class="goal">Mostly meetings, not code — every downstream phase rests on this interpretation.</p>
+      <ul class="check">
+        <li class="c-block">HR confirms <span class="mono">total_hours</span> = <b>employee-hours</b> <span class="chip s-ext">owner: HR</span></li>
+        <li class="c-todo">Confirmed employee eligibility rules</li>
+        <li class="c-todo">Accepted permission model (roles &amp; departments)</li>
+        <li class="c-todo">Approved manual review-CSV handoff</li>
+        <li class="c-block">Reconcile legacy approvals missing approver/date <span class="chip s-ext">owner: HR / business</span></li>
+        <li class="c-block">SAP team: accepted format + import transaction (6 questions, see §10) <span class="chip s-ext">owner: SAP team</span></li>
+      </ul>
+    </div>
+
+    <!-- STAGE 5 -->
+    <div class="stage block">
+      <div class="stage-head"><h3>Stage 5 — Operations (Phase 5)</h3><span class="chip s-todo">not started</span><span class="chip s-ext">blocked on hosting decision</span></div>
+      <p class="goal">Turn scaffolding into an installed, monitored service with tested recovery.</p>
+      <ul class="check">
+        <li class="c-block">Chosen host + domain + TLS <span class="chip s-ext">owner: management / IT</span></li>
+        <li class="c-todo">Real SMTP sender configured &amp; verified from the target host (<span class="mono">send_test_email</span>)</li>
+        <li class="c-todo">Scheduled notification delivery (every minute)</li>
+        <li class="c-todo">Alert routing: failed emails, stale queue, failed imports, service health</li>
+        <li class="c-todo">Encrypted off-host PostgreSQL backups + retention (tooling exists)</li>
+        <li class="c-todo">Rehearsed restore + rollback runbook</li>
+      </ul>
+    </div>
+
+    <!-- STAGE 6 -->
+    <div class="stage block">
+      <div class="stage-head"><h3>Stage 6 — Pilot &amp; launch (Phase 6)</h3><span class="chip s-todo">not started</span></div>
+      <p class="goal">Prove it with real users, then sign off.</p>
+      <ul class="check">
+        <li class="c-todo">Acceptance testing + load testing</li>
+        <li class="c-todo">One-department pilot</li>
+        <li class="c-todo">Operational ownership defined (on-call runbook)</li>
+        <li class="c-todo">HR + IT sign-off → open to employees</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Deferred product work (beyond this release — not launch gates)</h3>
+  <div class="grid g3">
+    <div class="card"><p class="muted" style="margin:0;font-size:13.5px">Employee directory with SAP personnel identifiers + optional login linkage</p></div>
+    <div class="card"><p class="muted" style="margin:0;font-size:13.5px">Per-day/per-employee allocations, shifts, breaks, time zones, overlap checks</p></div>
+    <div class="card"><p class="muted" style="margin:0;font-size:13.5px">HR-approved hour limits, budgets, eligibility thresholds, currency/rate ownership</p></div>
+    <div class="card"><p class="muted" style="margin:0;font-size:13.5px">Drafts, return-for-correction, versioned amendments, approved-request cancellation, replacement exports with partial-import reconciliation</p></div>
+    <div class="card"><p class="muted" style="margin:0;font-size:13.5px">Delegated approvers, reminder/escalation rules, reporting, corporate SSO/MFA</p></div>
+    <div class="card"><p class="muted" style="margin:0;font-size:13.5px">Actual-hours / payroll processing (outside confirmed advance-authorization scope)</p></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ 8. BLOCKED ══════════════════════ -->
+<section id="blocked">
+  <h2>8 · Blocked on other people — decision map</h2>
+  <table>
+    <thead><tr><th>Decision needed</th><th>Owner</th><th>Blocks</th></tr></thead>
+    <tbody>
+      <tr><td>Hosting and domain</td><td><span class="chip s-ext">Management / IT</span></td><td>All of Stage 5</td></tr>
+      <tr><td>Sender identity: Graph application, internal relay, or service mailbox</td><td><span class="chip s-ext">IT</span></td><td>1.1, 1.2, 1.6 — notification automation</td></tr>
+      <tr><td>Employee-hours interpretation</td><td><span class="chip s-ext">HR</span></td><td>Stage 4 + legacy data</td></tr>
+      <tr><td>Legacy approval reconciliation</td><td><span class="chip s-ext">HR / business</span></td><td>Export eligibility</td></tr>
+      <tr><td>MFA and SSO requirements</td><td><span class="chip s-ext">IT</span></td><td>Stage 2 design</td></tr>
+    </tbody>
+  </table>
+  <div class="callout good" style="margin-top:12px"><b>Work needing no external input (can start today)</b>
+    Stage 1.3–1.5 code is delivered; 1.6 checks/examples are ready. Authentication implementation in Stage 2, containers &amp; staging in Stage 3, and backup/restore tooling in Stage 5 can progress while external decisions remain pending.</div>
+</section>
+
+<!-- ══════════════════════ 9. ORDER ══════════════════════ -->
+<section id="order">
+  <h2>9 · Recommended order</h2>
+  <div class="chain">
+    <div class="step"><b>Stage 0</b><small>✓ done 2 Oct 2026</small></div>
+    <span class="sep">→</span>
+    <div class="step"><b>1.1 sender decision</b><small>waiting on IT</small></div>
+    <span class="sep">→</span>
+    <div class="step"><b>1.2 schedule</b><small>→ 1.6 alerts</small></div>
+    <span class="sep">→</span>
+    <div class="step"><b>Stage 4 sign-off</b><small>cheapest · largest unblocking effect</small></div>
+    <span class="sep">→</span>
+    <div class="step parallel"><b>Stage 2 ∥ Stage 3</b><small>auth in parallel with staging</small></div>
+    <span class="sep">→</span>
+    <div class="step"><b>Stage 5</b><small>operations</small></div>
+    <span class="sep">→</span>
+    <div class="step"><b>Stage 6</b><small>pilot &amp; launch</small></div>
+  </div>
+  <div class="callout info" style="margin-top:14px"><b>Don’t let Stage 4 slip</b>
+    It looks like administration rather than engineering, but it is the cheapest item with the largest unblocking effect — and the one nobody schedules.</div>
+</section>
+
+<!-- ══════════════════════ 10. RISKS ══════════════════════ -->
+<section id="risk">
+  <h2>10 · Risks &amp; caveats to carry forward</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">Delivery &amp; mail</h3>
+      <ul class="check">
+        <li class="c-part">Outlook sender runs only on Windows with the desktop client signed in — it sends from that person’s mailbox</li>
+        <li class="c-done">Production settings refuse to start unless SMTP backend selected → no accidental promotion</li>
+        <li class="c-part">Local mail capture accepts unauthenticated mail — must stay bound to <span class="mono">127.0.0.1</span></li>
+        <li class="c-done">Optional test mode marks subject, text and HTML and redirects to an allowlist; use fictional data in a disposable database</li>
+        <li class="c-done">Production outbox delivery defaults to disabled; sender verification remains available before activation</li>
+        <li class="c-part">Queue monitoring detects failed/stale/stuck rows; real alert routing and scheduler installation still pending</li>
+        <li class="c-part">Delivery is <b>at-least-once</b>: crash between SMTP acceptance and DB commit can duplicate a notification (business actions remain deduplicated)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Data, SAP &amp; operations</h3>
+      <ul class="check">
+        <li class="c-part">No real SMTP authentication tested; no production deployment performed or verified</li>
+        <li class="c-part">No SAP import adapter — CSV is review-format only; “import confirmed” is human-recorded</li>
+        <li class="c-part">Approved requests are intentionally immutable — corrections need the future amendment workflow, not DB edits</li>
+        <li class="c-part">Legacy quantities not reinterpreted; reconciliation required before export</li>
+        <li class="c-part">Database operators remain privileged — need controlled access + backups</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout warn" style="margin-top:14px"><b>“SAP contract” open questions — ask the SAP team for an accepted advance-authorization sample</b>
+    1) Required personnel/department/cost-center/overtime-type IDs · 2) Are unnamed department authorizations accepted? · 3) Do rows represent request, employee, date, or shift? · 4) Meaning of hours, currency, rate, time-zone boundaries · 5) Encoding, separators, decimal/date formats, column order, max lengths, validation · 6) Import errors, partial acceptance, corrections, dedup identifiers.
+    A final machine-import adapter must implement the SAP contract — it must <b>not</b> blindly reuse the review-file CSV transformations.</div>
+
+  <div class="callout info"><b>Upgrade / migration path (existing installation)</b>
+    Stop writes → keep old release + tested backup → <span class="mono">check_legacy_requests</span> (read-only preflight) → <span class="mono">migrate</span> → deploy backend + frontend <b>together</b> (assignments now require <span class="mono">expected_version</span>; exports require explicit <span class="mono">request_ids</span> + <span class="mono">versions</span>; re-download uses saved-batch endpoint). Do not reset or delete existing data.</div>
+</section>
+
+<!-- ══════════════════════ 11. FILES ══════════════════════ -->
+<section id="files">
+  <h2>11 · Key files — where everything lives</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="margin-top:0">Backend</h3>
+      <p class="muted" style="font-size:13px;margin:0">
+        <span class="mono">backend/overtimeapp/models.py</span> — entities &amp; constraints<br>
+        <span class="mono">backend/overtimeapp/views.py</span> — workflow, export pipeline, guards<br>
+        <span class="mono">backend/overtimeapp/permissions.py</span> + <span class="mono">access.py</span> — roles &amp; eligibility<br>
+        <span class="mono">backend/overtimeapp/emails.py</span> + <span class="mono">delivery.py</span> — saved multipart messages and test delivery policy<br>
+        <span class="mono">backend/overtimeapp/templates/overtimeapp/emails/</span> — HTML + plain-text templates<br>
+        <span class="mono">backend/overtimeapp/management/commands/</span> — send_notifications, check_notifications, seed_users, check_legacy_requests, send_test_email<br>
+        <span class="mono">backend/core/</span> — settings (dev / test / production), urls<br>
+        <span class="mono">backend/overtimeapp/tests.py</span> + notification test modules — workflow, delivery, templates and queue checks
+      </p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Frontend · deploy · evidence</h3>
+      <p class="muted" style="font-size:13px;margin:0">
+        <span class="mono">frontend/src/App.tsx</span> — routes &amp; role guards<br>
+        <span class="mono">frontend/src/pages/</span> — Login + 4 workspaces (dept, head, HR, admin console)<br>
+        <span class="mono">frontend/src/components/ChangePasswordDialog.tsx</span> — self-service password change<br>
+        <span class="mono">frontend/tests/smoke.mjs</span> — Playwright workflow (isolated DB)<br>
+        <span class="mono">deploy/</span> — nginx, systemd service/timer, backup_database.py examples<br>
+        <span class="mono">docs/VERIFICATION.md</span> — what actually passed, with limits<br>
+        <span class="mono">docs/NOTIFICATIONS.md</span> — easy Outlook testing and production activation<br>
+        <span class="mono">scripts/preview_notifications.py</span> — fictional email previews, no external delivery<br>
+        <span class="mono">docs/PRODUCTION_READINESS.md</span> — launch gates &amp; migration steps<br>
+        <span class="mono">.verification/mail-catcher/</span> — 4 captured notification emails<br>
+        <span class="mono">demo-artifacts/overtime-workflow-demo.mp4</span> — recorded workflow
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Generated 5 October 2026 from the repository documents (PROJECT_STATUS, REMAINING_WORK, PRODUCTION_READINESS, VERIFICATION, SETUP_CHECKLIST, ARCHITECTURE) and the source under <span class="mono">mubea_overtime_management_system/</span>.
+  This page is an orientation aid, not a status claim — verification evidence lives in <span class="mono">docs/VERIFICATION.md</span>.
+</footer>
+
+</div>
+</body>
+</html>

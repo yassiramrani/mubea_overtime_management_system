@@ -1,8 +1,8 @@
 # Project status
 
-Updated 2 October 2026.
+Updated 5 October 2026.
 
-The application implements advance overtime submission, approval/rejection, pending withdrawal, employee assignment, audit history, and persisted review CSV exports. Phase 1 addresses workflow usability, filter/pagination behavior, assignment repair, browser verification, and setup accuracy.
+The application implements advance overtime submission, approval/rejection, pending withdrawal, employee assignment, audit history, persisted review CSV exports, an administration console, superuser account management, and a self-service password change. Phase 1 addresses workflow usability, filter/pagination behavior, assignment repair, browser verification, and setup accuracy.
 
 **This is not a production-ready declaration.** Use [verification evidence](docs/VERIFICATION.md) for actual commands, results, and limitations. Earlier test counts and completion claims are historical and must not be treated as evidence for the current files.
 
@@ -11,9 +11,10 @@ The application implements advance overtime submission, approval/rejection, pend
 - Hours represent total employee-hours. HR approval is needed before interpreting legacy quantities.
 - CSV files use `approval-review-v1`; no automatic SAP connection or verified SAP import adapter exists.
 - Assignments use eligible application user accounts; a separate personnel directory has not been implemented.
-- Browser login uses expiring tokens in local storage. App-managed MFA and cookie-based browser sessions are Phase 2 work.
-- A notification outbox, a delivery command, and an account-provisioning command exist. Notifications have been delivered through a signed-in Outlook desktop client and through a local capture server for demonstration. A production sender (SMTP or API-based) and a real delivery schedule still need target-environment setup; nothing drains the outbox automatically yet.
-- Production settings, Linux service/proxy examples, and backups tooling exist. They do not establish an installed service or tested production recovery. Remote CI is active on `main` and passing, but its last run predates the notification changes, which are not yet committed.
+- Browser login uses expiring tokens in local storage. App-managed MFA and cookie-based browser sessions are Phase 2 work. Signed-in users can change their own password (their other sessions are signed out); recovery for a locked-out user still requires a superuser reset from the console.
+- Administration-console account and role management is restricted to Django superusers; staff and profile-admins cannot change roles. Deactivation replaces deletion, so workflow history and PROTECTed references stay intact, and the console refuses self-lockout and last-administrator removal.
+- Notifications now store HTML and plain-text snapshots, support test-recipient redirection, and expose failed/stuck queue checks. The existing signed-in Outlook desktop sender remains the easy Windows development path. Production delivery defaults to disabled until sender verification and explicit opt-in. A production sender, installed scheduler and external alert routing still need target-environment setup; nothing drains the outbox automatically yet. See [notification setup](docs/NOTIFICATIONS.md).
+- Production settings, Linux service/proxy examples, and backup tooling exist. They do not establish an installed service or tested production recovery. Earlier remote CI passed; current Stage 1 changes are local and have not been checked remotely.
 
 
 ## Remaining phases
