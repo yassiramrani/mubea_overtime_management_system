@@ -14,7 +14,7 @@ The application implements advance overtime submission, approval/rejection, pend
 - Browser login uses expiring tokens in local storage. App-managed MFA and cookie-based browser sessions are Phase 2 work. Signed-in users can change their own password (their other sessions are signed out); recovery for a locked-out user still requires a superuser reset from the console.
 - Administration-console account and role management is restricted to Django superusers; staff and profile-admins cannot change roles. Deactivation replaces deletion, so workflow history and PROTECTed references stay intact, and the console refuses self-lockout and last-administrator removal.
 - Notifications now store HTML and plain-text snapshots, support test-recipient redirection, and expose failed/stuck queue checks. The existing signed-in Outlook desktop sender remains the easy Windows development path. Production delivery defaults to disabled until sender verification and explicit opt-in. A production sender, installed scheduler and external alert routing still need target-environment setup; nothing drains the outbox automatically yet. See [notification setup](docs/NOTIFICATIONS.md).
-- Production settings, Linux service/proxy examples, and backup tooling exist. They do not establish an installed service or tested production recovery. Earlier remote CI passed; current Stage 1 changes are local and have not been checked remotely.
+- Production settings, Linux service/proxy examples, and backup tooling exist. They do not establish an installed service or tested production recovery. Remote CI runs on every push and passed on Linux for the current revision (run #6): full suite on PostgreSQL including concurrency tests, frontend build and browser workflow.
 
 
 ## Remaining phases

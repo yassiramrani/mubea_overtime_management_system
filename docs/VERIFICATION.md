@@ -44,13 +44,24 @@ No production deployment, real SMTP delivery, actual SAP import, complete employ
 
 Local logs, screenshots, the fake-data CSV and a private pre-migration SQLite backup are under ignored `.verification/`. Source-backed instructions and launch gates are in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md). The independent reviewer covered the changed workflow boundary; this was not an exhaustive repository security scan.
 
+## Administration console, account management and password change (5 October 2026)
+
+| Area | Command / check | Result |
+|---|---|---|
+| Backend suite | `manage.py test overtimeapp --settings=core.test_settings --noinput` | 88 tests run locally: 85 passed, 3 PostgreSQL-only concurrency tests skipped |
+| Remote CI | `Application checks` on `main`, run #6 | Passed on Linux for this revision: the full 88-test suite against PostgreSQL (concurrency and notification-health modules included) plus the frontend build and browser workflow |
+| Account API tests | New `AdminAccountManagementTests` | Superuser-only create/update, role and department rules, deactivation blocks login, password validators, self- and last-administrator guards |
+| Password change tests | New `PasswordChangeTests` | Token rotation invalidates the previous token; wrong current password and weak or unchanged passwords rejected |
+| Browser workflow | `npm run test:smoke` | Dept → head → HR → admin console; creates and deactivates an account; rotates a password and signs in with it |
+| Console captures | `SMOKE_OUTPUT=.verification/admin-dashboard` | Desktop/mobile console, account-lifecycle and password-dialog captures retained locally (ignored) |
+
 ## Stage 1 notification progress (5 October 2026)
 
 These checks cover the current local changes; earlier counts below are historical.
 
 | Area | Command / check | Result |
 |---|---|---|
-| Backend suite | `manage.py test overtimeapp --settings=core.test_settings --noinput` | 86 tests run: 83 passed, 3 PostgreSQL-only concurrency tests skipped |
+| Backend suite | `manage.py test overtimeapp --settings=core.test_settings --noinput` | 88 tests run: 85 passed, 3 PostgreSQL-only concurrency tests skipped locally; remote CI runs all 88 against PostgreSQL |
 | Stage 1 regression coverage | New template, delivery and health test modules included in the suite | 31 tests passed; covers event types/routes, escaping/snapshots, multipart and legacy text, redirection, disabled delivery, five-attempt terminal failure and queue-health boundaries |
 | Django checks and migrations | `manage.py check`, `makemigrations --check --dry-run` with `core.test_settings` | No issues; no missing migrations |
 | Production configuration | `manage.py check --deploy --fail-level WARNING` with representative production environment and disabled delivery | Passed with no warnings; does not contact SMTP or establish real infrastructure |
@@ -69,7 +80,8 @@ database and sender.
 was configured, and no scheduler or external alert routing was installed. Outlook
 COM plain-text/HTML handling was tested with mocks. Browser preview and actual
 Outlook rendering were not verified; `agent-browser` was unavailable locally.
-PostgreSQL concurrency tests and remote CI were not rerun for these changes.
+PostgreSQL concurrency and notification-health tests were later rerun by remote CI
+(run #6 passed on Linux; see the console section above).
 Production outbox delivery is disabled by default until explicit opt-in after
 sender verification. Demo deliveries mark rows sent; use fictional data in a
 disposable database. See [notification setup](NOTIFICATIONS.md).
