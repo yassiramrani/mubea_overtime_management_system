@@ -1,5 +1,7 @@
 [Unit]
 Description=Deliver queued overtime notifications
+# Production defaults to disabled delivery. Verify sender receipt, then explicitly
+# set NOTIFICATIONS_DELIVERY_ENABLED=True in the dedicated environment file.
 [Service]
 Type=oneshot
 User=overtime

@@ -208,6 +208,7 @@ class EmailLog(models.Model):
     )
     error_message = models.TextField(blank=True)
     body = models.TextField(blank=True)
+    html_body = models.TextField(blank=True, default='')
     attempts = models.PositiveIntegerField(default=0)
     next_attempt_at = models.DateTimeField(default=timezone.now)
     delivered_at = models.DateTimeField(null=True, blank=True)

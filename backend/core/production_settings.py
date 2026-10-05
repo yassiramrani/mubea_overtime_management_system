@@ -11,6 +11,8 @@ if not os.getenv('REDIS_URL'):
     raise ImproperlyConfigured('Production requires REDIS_URL for shared login throttling.')
 if EMAIL_BACKEND != 'django.core.mail.backends.smtp.EmailBackend':
     raise ImproperlyConfigured('Production requires a configured SMTP email backend.')
+# A timer installed before sender verification must not consume outbox attempts.
+NOTIFICATIONS_DELIVERY_ENABLED = notification_env_flag('NOTIFICATIONS_DELIVERY_ENABLED', False)
 if not ALLOWED_HOSTS or '*' in ALLOWED_HOSTS:
     raise ImproperlyConfigured('Production requires explicit ALLOWED_HOSTS.')
 if not PUBLIC_BASE_URL.startswith('https://'):

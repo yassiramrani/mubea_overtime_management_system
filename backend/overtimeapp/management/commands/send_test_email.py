@@ -10,10 +10,10 @@ stored; the exception text usually names the SMTP reason (for example a refused
 sender or an authentication failure) and does not contain the password.
 """
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.core.validators import validate_email
+from overtimeapp.delivery import send_notification_mail, validate_notification_configuration
 
 SMTP_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
@@ -38,6 +38,13 @@ class Command(BaseCommand):
             validate_email(recipient)
         except ValidationError:
             raise CommandError(f'Invalid recipient address: {recipient}')
+        try:
+            test_mode, redirect_to = validate_notification_configuration()
+        except ImproperlyConfigured as exc:
+            raise CommandError(str(exc)) from exc
+        effective_recipients = redirect_to if test_mode else [recipient]
+        if test_mode:
+            self.stdout.write(self.style.WARNING('TEST MODE: --to is replaced by NOTIFICATIONS_REDIRECT_TO.'))
 
         if settings.EMAIL_BACKEND in LOCAL_ONLY_BACKENDS:
             self.stdout.write(self.style.WARNING(
@@ -53,12 +60,10 @@ class Command(BaseCommand):
             self.stdout.write('Sending through the signed-in Outlook desktop profile; DEFAULT_FROM_EMAIL is ignored.')
 
         try:
-            accepted = send_mail(
-                subject='Overtime notifications test',
-                message='Test message from the overtime management system. Real notifications use the same settings.',
-                from_email=None,
-                recipient_list=[recipient],
-                fail_silently=False,
+            accepted = send_notification_mail(
+                subject='[TEST] Overtime notifications test',
+                body='Test message from the overtime management system. Real notifications use the same settings.',
+                recipients=[recipient],
             )
         except Exception as exc:
             raise CommandError(f'Delivery failed ({type(exc).__name__}): {exc}')
@@ -66,5 +71,5 @@ class Command(BaseCommand):
         if accepted != 1:
             raise CommandError('The mail backend did not accept the message.')
 
-        self.stdout.write(self.style.SUCCESS(f'Test message accepted for {recipient}.'))
+        self.stdout.write(self.style.SUCCESS(f'Test message accepted for {", ".join(effective_recipients)}.'))
         self.stdout.write('Check the mailbox; delivery is asynchronous once the server accepts the message.')

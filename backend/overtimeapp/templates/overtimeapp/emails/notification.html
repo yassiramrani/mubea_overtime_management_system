@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ subject }}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f3f5f7;color:#182635;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f3f5f7;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <!--[if mso]><table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;background-color:#ffffff;border:1px solid #dce2e8;">
+          <tr>
+            <td bgcolor="#003f6b" style="padding:22px 28px;color:#ffffff;">
+              <p style="margin:0 0 5px;font-size:26px;font-weight:bold;letter-spacing:1px;">MUBEA</p>
+              <p style="margin:0;font-size:13px;">Overtime Management</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 28px 20px;">
+              <p style="margin:0 0 10px;color:#526375;font-size:12px;font-weight:bold;text-transform:uppercase;">{{ event_label }}</p>
+              <h1 style="margin:0 0 16px;font-size:22px;line-height:30px;font-weight:bold;">{{ subject }}</h1>
+              <p style="margin:0;font-size:15px;line-height:23px;">{{ message|linebreaksbr }}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 22px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:14px;line-height:21px;">
+                <tr><th scope="row" align="left" valign="top" width="38%" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Request</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;word-break:break-word;">{{ request_id }}</td></tr>
+                <tr><th scope="row" align="left" valign="top" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Title</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;">{{ title }}</td></tr>
+                <tr><th scope="row" align="left" valign="top" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Department</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;">{{ department }}</td></tr>
+                <tr><th scope="row" align="left" valign="top" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Requested by</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;">{{ requester_name }}</td></tr>
+                <tr><th scope="row" align="left" valign="top" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Status</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;">{{ status }}</td></tr>
+                <tr><th scope="row" align="left" valign="top" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Overtime dates</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;">{{ start_date }} to {{ end_date }}</td></tr>
+                <tr><th scope="row" align="left" valign="top" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Employee-hours requested</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;font-weight:bold;">{{ total_hours }}</td></tr>
+                <tr><th scope="row" align="left" valign="top" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Assignment</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;">{{ assignment_context }}</td></tr>
+                {% if submitted_at %}<tr><th scope="row" align="left" valign="top" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Submitted on</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;">{{ submitted_at }}</td></tr>{% endif %}
+                {% if approved_at %}<tr><th scope="row" align="left" valign="top" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Approved on</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;">{{ approved_at }}</td></tr>{% endif %}
+                {% if approver_name %}<tr><th scope="row" align="left" valign="top" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Approved by</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;">{{ approver_name }}</td></tr>{% endif %}
+                {% if rejected_at %}<tr><th scope="row" align="left" valign="top" style="padding:9px 12px 9px 0;border-bottom:1px solid #e4e9ee;color:#526375;font-weight:normal;">Rejected on</th><td style="padding:9px 0;border-bottom:1px solid #e4e9ee;">{{ rejected_at }}</td></tr>{% endif %}
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 24px;font-size:14px;line-height:22px;">
+              <h2 style="margin:0 0 6px;font-size:15px;">Description</h2>
+              <p style="margin:0 0 16px;">{{ description|linebreaksbr }}</p>
+              <h2 style="margin:0 0 6px;font-size:15px;">Justification</h2>
+              <p style="margin:0;">{{ reason|linebreaksbr }}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 28px;">
+              <p style="margin:0 0 10px;color:#526375;font-size:13px;">{{ role_label }}</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr><td align="center" bgcolor="#003f6b" style="padding:13px 20px;"><a href="{{ url }}" style="color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;display:inline-block;">{{ cta_label }}</a></td></tr>
+              </table>
+              <p style="margin:16px 0 0;color:#526375;font-size:12px;line-height:19px;">You can also open the dashboard here:<br><a href="{{ url }}" style="color:#003f6b;word-break:break-word;">{{ url }}</a></p>
+            </td>
+          </tr>
+          <tr>
+            <td bgcolor="#f8fafb" style="padding:18px 28px;border-top:1px solid #e4e9ee;color:#526375;font-size:12px;line-height:19px;">This notification records the request details at the time of the update. Open the dashboard for its current status.</td>
+          </tr>
+        </table>
+        <!--[if mso]></td></tr></table><![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

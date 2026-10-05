@@ -3,6 +3,10 @@ from .settings import *  # noqa: F401,F403
 
 SECURE_SSL_REDIRECT = False
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+NOTIFICATIONS_DELIVERY_ENABLED = True
+NOTIFICATIONS_TEST_MODE = False
+NOTIFICATIONS_REDIRECT_TO = []
+NOTIFICATIONS_STALE_MINUTES = 15
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
 CACHES = {'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}

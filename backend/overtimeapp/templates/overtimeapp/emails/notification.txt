@@ -1,0 +1,29 @@
+{% autoescape off %}{{ subject }}
+
+Mubea | Overtime Management
+{{ event_label }}
+
+{{ message }}
+
+Request: {{ request_id }}
+Title: {{ title }}
+Department: {{ department }}
+Requested by: {{ requester_name }}
+Status: {{ status }}
+Overtime dates: {{ start_date }} to {{ end_date }}
+Authorized employee-hours requested: {{ total_hours }}
+Assignment: {{ assignment_context }}
+{% if submitted_at %}Submitted on: {{ submitted_at }}
+{% endif %}{% if approved_at %}Approved on: {{ approved_at }}
+{% endif %}{% if approver_name %}Approved by: {{ approver_name }}
+{% endif %}{% if rejected_at %}Rejected on: {{ rejected_at }}
+{% endif %}
+Description:
+{{ description }}
+
+Justification:
+{{ reason }}
+
+{{ role_label }}: {{ cta_label }}
+Open dashboard: {{ url }}
+{% endautoescape %}

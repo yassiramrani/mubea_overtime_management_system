@@ -1,10 +1,10 @@
 # Remaining work
 
-**Mubea Overtime Management System** — updated 2 October 2026.
+**Mubea Overtime Management System** — updated 5 October 2026.
 
 This plan records what remains before the application can be launched. It follows
 the phases in [PROJECT_STATUS.md](../PROJECT_STATUS.md) and adds the notification
-work carried out on 2 October 2026.
+work carried out on 2 and 5 October 2026.
 
 ---
 
@@ -12,11 +12,11 @@ work carried out on 2 October 2026.
 
 | Item | State |
 |---|---|
-| Backend tests | 49 pass locally; the 3 PostgreSQL concurrency tests are skipped without a PostgreSQL service |
-| Remote CI | Active on `main` and passing; the backend job runs the PostgreSQL concurrency tests |
+| Backend tests | Current checks and counts are recorded in [VERIFICATION.md](VERIFICATION.md); PostgreSQL concurrency checks require PostgreSQL |
+| Remote CI | Historical pushed checks passed; current Stage 1 changes have not been pushed or checked remotely |
 | Django checks | `manage.py check` clean; no pending migrations |
 | Frontend | Build and browser workflow both pass |
-| Notifications | Outbox, delivery command and two verified senders exist; nothing drains the outbox automatically |
+| Notifications | Multipart snapshots, safe demo redirection and queue-health checks delivered; automatic scheduling and alert routing still pending |
 | Manager accounts | Provisioning command ready and applied to the local development database only |
 | Production sender | Undecided; needs IT |
 | Hosting | Undecided |
@@ -36,18 +36,24 @@ work carried out on 2 October 2026.
 
 ## Stage 1 — Notifications, finished properly
 
-| # | Task | Depends on |
+| # | Task | Status / remaining dependency |
 |---|---|---|
-| 1.1 | Decide the production sender: Microsoft Graph app-only, or an internal relay | IT |
-| 1.2 | Schedule `send_notifications` every minute | 1.1 |
-| 1.3 | Keep the Outlook backend as the Windows and development fallback | — |
-| 1.4 | Add HTML message templates; messages are plain text today | — |
-| 1.5 | Optional: redirect and test-mode safeguard so a demonstration cannot be mistaken for real traffic | — |
-| 1.6 | Alert on failed emails and stale queue rows | 1.2 |
+| 1.1 | Decide the production sender: Microsoft Graph app-only, or an internal relay | IT pending; current production settings support SMTP only |
+| 1.2 | Schedule `send_notifications` every minute | Timer example ready; production delivery defaults to disabled; install after 1.1 and confirmed sender receipt |
+| 1.3 | Keep the Outlook backend as the Windows and development fallback | Done; already selected locally, plain-text and HTML paths tested with mocked COM |
+| 1.4 | Add HTML message templates | Done; escaped, persisted HTML plus plain-text fallback for all workflow notifications |
+| 1.5 | Redirect and test-mode safeguard | Done; recipient allowlist and TEST / DEMO markers applied at delivery, including sender verification |
+| 1.6 | Alert on failed emails and stale queue rows | Queue-check command and timer examples ready; installed monitoring and external alert routing pending |
 
 **Highest risk in the plan.** A message is marked `failed` permanently after five
 delivery attempts and is never retried. Verify the sender (1.1) **before** enabling
-any scheduler (1.2), or the first misconfiguration silently loses every notification.
+any scheduler (1.2). Production outbox delivery now requires an explicit opt-in,
+and `check_notifications` exposes terminal/stale failures. Installation and alert
+routing still need the target environment.
+
+The easy Windows testing path remains signed-in Outlook while IT's decision is
+pending. See [notification setup](NOTIFICATIONS.md) for fictional previews,
+test-mail verification and the production activation sequence.
 
 ---
 
@@ -110,8 +116,10 @@ Acceptance and load testing; a one-department pilot; HR and IT sign-off.
 
 ## Work needing no external input
 
-All of Stage 0 (done); items 1.3 to 1.6; all of Stage 2; the container and staging
-work in Stage 3; backup and restore tooling in Stage 5.
+Stage 0 and items 1.3–1.5 are delivered; 1.6 queue checks and timer examples are
+ready. Authentication implementation in Stage 2, container/staging work in Stage 3,
+and backup/restore tooling in Stage 5 can progress. Stage 1 monitoring installation
+and external alert routing still need the target environment and an operator owner.
 
 ---
 
@@ -142,7 +150,9 @@ item with the largest unblocking effect — and the one nobody schedules.
   sender by accident.
 - The local mail capture server accepts unauthenticated mail and must stay bound to
   `127.0.0.1`.
-- Notification emails carry no indication that they are test messages.
+- Test-mode messages are now marked and redirected. Use fictional data in a
+  disposable database: successfully redirected rows become sent and are not
+  replayed to their original recipients.
 - Delivery is at least once: a crash after the mail server accepts a message but
   before the database commit can duplicate it.
 - No real SMTP authentication, no SAP import, and no production deployment has been

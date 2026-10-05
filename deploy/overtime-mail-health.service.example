@@ -1,0 +1,14 @@
+[Unit]
+Description=Report overtime notification queue health
+# The exit status and JSON journal output must be connected to operator monitoring.
+# This check never sends alert emails or drains the queue.
+[Service]
+Type=oneshot
+User=overtime
+Group=overtime
+WorkingDirectory=/opt/overtime/backend
+EnvironmentFile=/etc/overtime/production.env
+Environment=DJANGO_SETTINGS_MODULE=core.production_settings
+ExecStart=/opt/overtime/backend/venv/bin/python manage.py check_notifications --json
+NoNewPrivileges=true
+PrivateTmp=true

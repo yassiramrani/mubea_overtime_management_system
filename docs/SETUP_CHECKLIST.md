@@ -12,6 +12,8 @@ This replaces the historical “files to create” checklist. Django APIs and Re
 - [ ] Start Django on localhost port 8000 and Vite on localhost port 3000.
 - [ ] Confirm login and the submit → approve → assign → preview/download workflow.
 - [ ] Run the delivery command and inspect local notifications.
+- [ ] For notification demos, use fictional data and the redirect allowlist; inspect [previews and notification setup](NOTIFICATIONS.md).
+- [ ] Check queue health with `manage.py check_notifications --json` and connect failures to monitoring before launch.
 - [ ] Run backend checks, PostgreSQL concurrency tests, frontend build, and the isolated browser suite.
 
 ## Phase 1 acceptance

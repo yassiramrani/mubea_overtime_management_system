@@ -12,7 +12,7 @@ The confirmed business workflow is **approval of overtime in advance**, not paym
 - Optional named-employee assignment: managers specify whether names are required before export; HR can add names to either kind of request. Assigned employees must be active non-administrative accounts.
 - Explicit export selection, validation preview, persisted CSV content/checksum, immutable batches, duplicate prevention, authenticated re-download, and separately recorded SAP import outcomes. Confirmed outcomes cannot be overwritten.
 - Legacy approvals lacking approver/date are blocked from export until reconciled. Previously exported legacy rows remain excluded from new batches; no missing historic files are fabricated.
-- Durable plain-text email outbox, corrected dashboard URLs, one row per recipient, bounded retries and terminal failure status. Approval notifications also reach the requester. Sending no longer blocks the request API.
+- Durable HTML and plain-text email snapshots, corrected dashboard URLs, one row per recipient, bounded retries and terminal failure status. Approval notifications also reach the requester. Sending no longer blocks the request API. Optional recipient redirection marks test messages; queue monitoring reports failed and stuck rows.
 - Paginated dashboards, status/history visibility, justification and cost on the approval screen, assigned names and rejection reasons on the department screen, saved assignment editing, and export history on the HR screen.
 - Login throttling, eight-hour token lifetime by default, server-side logout, protected routes that wait for authentication, no prefilled demo password, and relative API URLs with Vite proxy support.
 - Supported Django stack and updated frontend dependencies; repeatable backend, concurrency, and browser workflow checks; CI configuration; strict production settings; production server and reverse-proxy/service examples.
@@ -78,7 +78,7 @@ The supplied CI runs backend checks and PostgreSQL tests, builds the frontend, a
 
 ## Email operations
 
-Run `python manage.py send_notifications --limit 100` every minute, using the supplied service/timer example or an equivalent scheduler. The command sends due queued messages, uses exponential retry delays, and stops after five failed attempts. Inspect queued/failed messages in Django admin or the admin-only email-log API. Alert on terminal failures and messages queued beyond the normal delivery window. Before go-live, verify every active head/HR manager has a deliverable email and that each required role exists.
+After sender verification, set `NOTIFICATIONS_DELIVERY_ENABLED=True` and run `python manage.py send_notifications --limit 100` every minute, using the supplied service/timer example or an equivalent scheduler. Production defaults to disabled delivery; an early timer exits without consuming attempts. The command sends due queued messages, uses exponential retry delays, and stops after five failed attempts. Inspect queued/failed messages in Django admin or the admin-only email-log API. Before go-live, verify every active head/HR manager has a deliverable email and that each required role exists.
 
 Verify the SMTP configuration from the target host before scheduling delivery:
 
@@ -87,6 +87,12 @@ python manage.py send_test_email --to <operator-address>
 ```
 
 This sends a single message through the configured backend and exits non-zero with the server's reason on failure; it does not read or write the notification outbox. `EMAIL_TIMEOUT` bounds a stuck SMTP conversation so a hung server cannot block the scheduled command. Set `EMAIL_USE_TLS=True` for STARTTLS on port 587, or `EMAIL_PORT=465` with `EMAIL_USE_TLS=False` and `EMAIL_USE_SSL=True` for implicit TLS.
+
+Run `python manage.py check_notifications --json` every minute and route its nonzero exit status to operator monitoring. It detects failed, stale, exhausted and empty-body queued messages without sending mail or exposing recipient/content data. Adapt the supplied `overtime-mail-health` service/timer examples; they do not configure external alert routing. Monitor timer execution independently too.
+
+`NOTIFICATIONS_TEST_MODE=True` requires a valid `NOTIFICATIONS_REDIRECT_TO` allowlist and marks subjects/text/HTML. Successful redirected rows become `sent` and will never be replayed to their original recipients. Use fictional data in a disposable database for demonstrations. See [notification setup](NOTIFICATIONS.md) for the full activation sequence and local preview command.
+
+Before activating real production notifications, set `NOTIFICATIONS_TEST_MODE=False` and clear `NOTIFICATIONS_REDIRECT_TO`, then explicitly enable delivery after sender verification.
 
 The local mail catcher and the Outlook desktop backend are development and prototype aids only; `core.production_settings` refuses to start unless the SMTP backend is selected, so neither can become the production sender by accident.
 

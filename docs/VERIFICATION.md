@@ -44,6 +44,36 @@ No production deployment, real SMTP delivery, actual SAP import, complete employ
 
 Local logs, screenshots, the fake-data CSV and a private pre-migration SQLite backup are under ignored `.verification/`. Source-backed instructions and launch gates are in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md). The independent reviewer covered the changed workflow boundary; this was not an exhaustive repository security scan.
 
+## Stage 1 notification progress (5 October 2026)
+
+These checks cover the current local changes; earlier counts below are historical.
+
+| Area | Command / check | Result |
+|---|---|---|
+| Backend suite | `manage.py test overtimeapp --settings=core.test_settings --noinput` | 86 tests run: 83 passed, 3 PostgreSQL-only concurrency tests skipped |
+| Stage 1 regression coverage | New template, delivery and health test modules included in the suite | 31 tests passed; covers event types/routes, escaping/snapshots, multipart and legacy text, redirection, disabled delivery, five-attempt terminal failure and queue-health boundaries |
+| Django checks and migrations | `manage.py check`, `makemigrations --check --dry-run` with `core.test_settings` | No issues; no missing migrations |
+| Production configuration | `manage.py check --deploy --fail-level WARNING` with representative production environment and disabled delivery | Passed with no warnings; does not contact SMTP or establish real infrastructure |
+| Local database upgrade | SQLite backup, `migrate`, before/after row-count comparison | Migration `0003_emaillog_html_body` applied; 5 users retained, workflow/outbox tables remained empty |
+| Local queue health | `manage.py check_notifications --json` | Exit 0; healthy empty queue, no rows changed or mail sent |
+| Easy Windows demo configuration | Private environment backup; enabled test mode in existing local Outlook configuration | All notification recipients redirect to the existing configured sender address; Django checks and empty-queue health passed; no mail sent |
+| Fictional notification previews | `python ../scripts/preview_notifications.py` | 5 multipart messages accepted by memory mail backend; every recipient redirected to `demo@example.com`; HTML/TXT/EML and index generated under `.verification/stage1/` |
+| Independent integration review | Read-only review of changed notification paths and tests | No blocking integration issues reported |
+
+The final backend log is `.verification/stage1-backend-tests.log`. A private local
+backup is `.verification/backups/before-stage1-2026-10-05.sqlite3`. The preview
+generator forces in-memory SQLite and local mail, independently of the configured
+database and sender.
+
+**Limits for this change:** no real email was sent, no production SMTP/Graph sender
+was configured, and no scheduler or external alert routing was installed. Outlook
+COM plain-text/HTML handling was tested with mocks. Browser preview and actual
+Outlook rendering were not verified; `agent-browser` was unavailable locally.
+PostgreSQL concurrency tests and remote CI were not rerun for these changes.
+Production outbox delivery is disabled by default until explicit opt-in after
+sender verification. Demo deliveries mark rows sent; use fictional data in a
+disposable database. See [notification setup](NOTIFICATIONS.md).
+
 ## Account provisioning and notification delivery (2 October 2026)
 
 Added after the review above; the ordered checks above do not cover it.

@@ -214,6 +214,23 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@overtimemanagement.com')
 
+
+def notification_env_flag(name, default):
+    value = os.getenv(name, str(default)).strip().lower()
+    if value not in {'true', 'false'}:
+        raise ImproperlyConfigured(f'{name} must be True or False.')
+    return value == 'true'
+
+
+# Production overrides delivery to disabled by default until the sender is verified.
+NOTIFICATIONS_DELIVERY_ENABLED = notification_env_flag('NOTIFICATIONS_DELIVERY_ENABLED', True)
+NOTIFICATIONS_TEST_MODE = notification_env_flag('NOTIFICATIONS_TEST_MODE', False)
+NOTIFICATIONS_REDIRECT_TO = [
+    address.strip() for address in os.getenv('NOTIFICATIONS_REDIRECT_TO', '').split(',')
+    if address.strip()
+]
+NOTIFICATIONS_STALE_MINUTES = int(os.getenv('NOTIFICATIONS_STALE_MINUTES', '15'))
+
 # Public Base URL for email links
 PUBLIC_BASE_URL = os.getenv('PUBLIC_BASE_URL', 'http://localhost:3000')
 
@@ -279,7 +296,6 @@ LOGS_DIR.mkdir(exist_ok=True)
 
 # Sessions have a bounded lifetime; login throttling shares Redis across workers.
 AUTH_TOKEN_TTL_SECONDS = int(os.getenv('AUTH_TOKEN_TTL_SECONDS', '28800'))
-EMAIL_TIMEOUT = 15
 # Development can run without Redis; production_settings.py explicitly requires it.
 if os.getenv('REDIS_URL') and not DEBUG:
     CACHES = {'default': {'BACKEND': 'django.core.cache.backends.redis.RedisCache', 'LOCATION': os.environ['REDIS_URL']}}

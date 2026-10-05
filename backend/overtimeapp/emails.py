@@ -1,6 +1,11 @@
 """Durable notification outbox. Delivery is handled by send_notifications."""
+from decimal import Decimal
+
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.template.loader import render_to_string
+from django.utils import timezone
+
 from .models import EmailLog
 
 
@@ -8,10 +13,67 @@ class OvertimeEmailService:
     @staticmethod
     def queue(overtime_request, recipients, email_type, subject, message, route):
         url = f'{settings.PUBLIC_BASE_URL.rstrip("/")}/{route}'
-        body = f'{subject}\n\nRequest: {overtime_request.request_id}\nTitle: {overtime_request.title}\nDepartment: {overtime_request.get_department_display()}\nAuthorized employee-hours requested: {overtime_request.total_hours}\n\n{message}\n\nOpen dashboard: {url}\n'
+        role_label, cta_label = {
+            'head-manager': ('Head Manager', 'Review overtime request'),
+            'hr-manager': ('HR Manager', 'Open HR dashboard'),
+            'dept-manager': ('Department Manager', 'Open department dashboard'),
+        }.get(route, ('Overtime Manager', 'Open dashboard'))
+        if route == 'dept-manager':
+            cta_label = {
+                'request_approved': 'View approved request',
+                'request_rejected': 'Review rejection',
+                'assignment_ready': 'View employee assignment',
+            }.get(email_type, cta_label)
+        elif route == 'hr-manager' and email_type == 'request_approved':
+            cta_label = 'Prepare approval for export'
+
+        event_label = dict(EmailLog._meta.get_field('email_type').choices).get(email_type, 'Overtime Update')
+        context = {
+            'subject': subject,
+            'event_label': event_label,
+            'message': message,
+            'request_id': overtime_request.request_id,
+            'title': overtime_request.title,
+            'department': overtime_request.get_department_display(),
+            'requester_name': overtime_request.requester.get_full_name() or overtime_request.requester.username,
+            'status': overtime_request.get_status_display(),
+            'start_date': str(overtime_request.start_date),
+            'end_date': str(overtime_request.end_date),
+            'total_hours': format(Decimal(str(overtime_request.total_hours)), '.2f'),
+            'description': overtime_request.description,
+            'reason': overtime_request.reason,
+            'assignment_context': (
+                'Named employee assignment required'
+                if overtime_request.requires_employee_assignment
+                else 'Department authorization without named employees'
+            ),
+            'submitted_at': OvertimeEmailService._format_timestamp(overtime_request.created_at),
+            'approved_at': OvertimeEmailService._format_timestamp(overtime_request.approval_date),
+            'rejected_at': OvertimeEmailService._format_timestamp(overtime_request.rejection_date),
+            'approver_name': (
+                overtime_request.approved_by.get_full_name() or overtime_request.approved_by.username
+                if overtime_request.approved_by_id else ''
+            ),
+            'role_label': role_label,
+            'cta_label': cta_label,
+            'url': url,
+        }
+        # Persist both variants now: retries must deliver the original notification,
+        # even if the request or the dashboard URL changes before delivery.
+        body = render_to_string('overtimeapp/emails/notification.txt', context)
+        html_body = render_to_string('overtimeapp/emails/notification.html', context)
         for recipient in sorted(set(email for email in recipients if email)):
             EmailLog.objects.create(overtime_request=overtime_request, recipient=recipient,
-                                    email_type=email_type, subject=subject, body=body, status='queued')
+                                    email_type=email_type, subject=subject, body=body,
+                                    html_body=html_body, status='queued')
+
+    @staticmethod
+    def _format_timestamp(value):
+        if value is None:
+            return ''
+        if timezone.is_aware(value):
+            value = timezone.localtime(value)
+        return value.strftime('%Y-%m-%d %H:%M %Z').strip()
 
     @staticmethod
     def send_request_submitted_notification(item):
