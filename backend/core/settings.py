@@ -188,6 +188,11 @@ CORS_ALLOWED_ORIGINS = [
     if origin.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv(
+    'CSRF_TRUSTED_ORIGINS', ','.join(CORS_ALLOWED_ORIGINS) if DEBUG else ''
+).split(',') if origin.strip()]
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = True

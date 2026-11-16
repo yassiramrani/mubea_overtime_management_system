@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import axios from 'axios'
 import api, { errorMessage } from '../services/api'
 import type { User } from '../types'
 
@@ -19,13 +20,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadUser = async () => {
     setLoading(true); setError('')
     try {
-      if (!localStorage.getItem('accessToken')) { setUser(null); return null }
       const response = await api.get<User>('/users/me/')
       setUser(response.data)
       return response.data
     } catch (err) {
       setUser(null)
-      if (localStorage.getItem('accessToken')) setError(errorMessage(err))
+      if (!axios.isAxiosError(err) || err.response?.status !== 401) setError(errorMessage(err))
       return null
     } finally { setLoading(false) }
   }
@@ -36,15 +36,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('auth-expired', expired)
   }, [])
   const login = async (username: string, password: string) => {
-    const response = await api.post('/auth/login/', { username, password })
-    localStorage.setItem('accessToken', response.data.token)
+    await api.post('/auth/session/login/', { username, password })
     const current = await loadUser()
     if (!current) throw new Error('Signed in, but unable to load your profile. Please retry.')
     return current
   }
   const logout = async () => {
-    if (localStorage.getItem('accessToken')) await api.post('/auth/logout/')
-    localStorage.removeItem('accessToken'); setUser(null); setError('')
+    try { await api.post('/auth/logout/') }
+    catch (err) { if (!axios.isAxiosError(err) || err.response?.status !== 401) throw err }
+    setUser(null); setError('')
   }
   return <AuthContext.Provider value={{ user, loading, error, retry: () => { void loadUser() }, login, logout }}>{children}</AuthContext.Provider>
 }

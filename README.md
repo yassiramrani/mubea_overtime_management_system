@@ -2,7 +2,7 @@
 
 Manage advance overtime requests from department submission through head-manager approval, HR employee assignment, and a reviewed CSV handoff.
 
-**The app is not production-ready.** Phase 1 improves and verifies the existing workflow. Public access with app-managed MFA is planned for Phase 2; current browser login still uses expiring tokens. Hosting, real email delivery, operational acceptance, and HR approval remain launch gates.
+**The app is not production-ready.** Phase 1 improves and verifies the existing workflow. Public access with app-managed MFA is planned for Phase 2; browser login now uses HttpOnly session cookies with CSRF protection; existing token API clients retain expiring tokens. See [browser sessions](docs/BROWSER_SESSIONS.md). Hosting, real email delivery, operational acceptance, and HR approval remain launch gates.
 
 ## Current application
 

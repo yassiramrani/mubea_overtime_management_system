@@ -1,3 +1,5 @@
+Update 16 November 2026: browser cookie sessions and CSRF protection are implemented; see [browser-session verification](BROWSER_SESSIONS.md). MFA, recovery, actual delivery and operational acceptance remain open.
+
 # Advance overtime approval: implementation and launch plan
 
 The confirmed business workflow is **approval of overtime in advance**, not payment for actual hours worked. `total_hours` means total employee-hours: five people for three hours is 15 hours. This unit needs HR sign-off before importing legacy records; existing quantities were not automatically reinterpreted or multiplied.

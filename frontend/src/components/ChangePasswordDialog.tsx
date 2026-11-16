@@ -23,8 +23,7 @@ export function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
     }
     setBusy(true); setError('')
     try {
-      const response = await api.post<{ token?: string }>('/auth/change-password/', { current_password: current, new_password: next })
-      if (response.data?.token) localStorage.setItem('accessToken', response.data.token)
+      await api.post('/auth/change-password/', { current_password: current, new_password: next })
       toast.success('Password changed. Other sessions were signed out.')
       onClose()
     } catch (err) {

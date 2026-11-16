@@ -17,7 +17,7 @@ const password = randomBytes(18).toString('hex')
 const env = { ...process.env, PYTHONPATH: backend, DJANGO_SETTINGS_MODULE: 'core.settings', DEBUG: 'True',
   SECRET_KEY: randomBytes(40).toString('hex'), DB_ENGINE: 'django.db.backends.sqlite3', DB_NAME: resolve(temp, 'db.sqlite3'),
   EMAIL_BACKEND: 'django.core.mail.backends.locmem.EmailBackend', REDIS_URL: '', ALLOWED_HOSTS: 'localhost,127.0.0.1',
-  SMOKE_PASSWORD: password, PUBLIC_BASE_URL: 'http://127.0.0.1:3109', VITE_API_URL: '/api', VITE_API_PROXY: 'http://127.0.0.1:8009' }
+  SMOKE_PASSWORD: password, PUBLIC_BASE_URL: 'http://127.0.0.1:3109', CSRF_TRUSTED_ORIGINS: 'http://127.0.0.1:3109', VITE_API_URL: '/api', VITE_API_PROXY: 'http://127.0.0.1:8009' }
 execFileSync(python, [resolve(frontend, 'tests/seed_smoke.py')], { cwd: backend, env, stdio: 'pipe' })
 const servers = [spawn(python, ['manage.py', 'runserver', '127.0.0.1:8009', '--noreload'], { cwd: backend, env }),
   spawn(process.execPath, [resolve(frontend, 'node_modules/vite/bin/vite.js'), '--host', '127.0.0.1', '--port', '3109', '--strictPort'], { cwd: frontend, env })]

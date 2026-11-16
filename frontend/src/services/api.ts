@@ -3,18 +3,22 @@ import axios from 'axios'
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 20000,
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 })
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken')
-  if (token && config.url !== '/auth/login/') config.headers.Authorization = `Token ${token}`
+// Remove legacy bearer storage once; browser credentials now stay in HttpOnly cookies.
+localStorage.removeItem('accessToken')
+api.interceptors.request.use(async (config) => {
+  if (!['get', 'head', 'options'].includes(config.method?.toLowerCase() || 'get')) {
+    const response = await api.get<{ csrfToken: string }>('/auth/session/csrf/')
+    config.headers['X-CSRFToken'] = response.data.csrfToken
+  }
   return config
 })
 
 api.interceptors.response.use((response) => response, (error) => {
-  if (error.response?.status === 401 && error.config?.url !== '/auth/login/') {
-    localStorage.removeItem('accessToken')
+  if (error.response?.status === 401 && error.config?.url !== '/auth/session/login/') {
     window.dispatchEvent(new Event('auth-expired'))
   }
   return Promise.reject(error)

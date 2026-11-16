@@ -58,9 +58,9 @@ A deployed reverse proxy must serve the frontend, route `/api/` to Django, and f
 - `/hr-manager`: employee assignment, explicit export selection, preview, saved batches, and import-result recording.
 - `/administration`: system console for administrators — key figures, longest-waiting approval queue, notification-outbox health, department workload, and saved export batches. Django superusers also manage accounts here: create users, assign roles and departments, reset passwords, grant Django administration access, and deactivate leavers.
 
-Every signed-in workspace header offers **Change password**: it asks for the current password, applies Django's password validators, rotates the API token, and signs out the account's other sessions.
+Every signed-in workspace header offers **Change password**: it asks for the current password, applies Django's password validators, rotates the browser session, revokes API tokens, and signs out other sessions.
 
-Current login stores expiring API tokens in local storage. App-managed MFA and cookie-based sessions are planned for Phase 2. A compiled frontend alone does not make the public deployment ready.
+Browser login uses HttpOnly session cookies and CSRF protection. Existing API token clients remain supported. See [session behavior and verification](../docs/BROWSER_SESSIONS.md).
 
 ## Isolated browser verification
 

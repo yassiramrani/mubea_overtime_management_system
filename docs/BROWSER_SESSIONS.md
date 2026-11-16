@@ -1,0 +1,11 @@
+# Browser sessions — 16 November 2026
+
+The React application now signs in through `/api/auth/session/login/`. Django stores the session in an HttpOnly, SameSite=Lax cookie; production settings require Secure cookies and HTTPS. Browser code does not store or send bearer tokens. Legacy `accessToken` localStorage is removed on app load. Existing `/api/auth/login/` token clients remain compatible and retain their expiration rules.
+
+Before unsafe requests the client obtains a masked CSRF value from `/api/auth/session/csrf/` and sends `X-CSRFToken`. Login explicitly checks CSRF even for anonymous callers. Authenticated cookie mutations use DRF SessionAuthentication checks. CSRF responses are not cached. Django rotates the session at login; expiration uses `AUTH_TOKEN_TTL_SECONDS`. Password changes preserve the caller's browser session, invalidate other sessions through Django's password hash and revoke API tokens. Deactivated users lose access.
+
+Use a same-origin frontend/API reverse proxy. If development uses a separate trusted frontend origin, set `CSRF_TRUSTED_ORIGINS` explicitly; DEBUG defaults to configured development CORS origins. Cross-site cookie deployments are not supported by this change. Session tables must be migrated using the existing setup procedure. Include them in retention/cleanup operations, for example Django `clearsessions` on an IT-owned schedule.
+
+Validation: 90 backend tests discovered, 87 passed and three PostgreSQL-only checks skipped on local SQLite; frontend build passed. The isolated browser workflow passed login, reload, request submission, approval, HR assignment, CSV history, administration, deactivation, password change and logout. No real email was sent. Refer to Django's [session invalidation](https://docs.djangoproject.com/en/5.2/topics/auth/default/#session-invalidation-on-password-change) and DRF's [SessionAuthentication](https://www.django-rest-framework.org/api-guide/authentication/#sessionauthentication).
+
+MFA, verified email and recovery remain Phase 2 work. Production PostgreSQL concurrency verification, HR acceptance, hosting, sender verification, durable queue scheduling and operations are still required. Cookie sessions alone do not make the application production-ready.

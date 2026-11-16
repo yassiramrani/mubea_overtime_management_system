@@ -1,3 +1,5 @@
+Update 16 November 2026: [HttpOnly browser sessions and CSRF protection](docs/BROWSER_SESSIONS.md) are implemented and verified locally. MFA, verified email and recovery remain pending. The historical Phase 2 cookie-session item below is now implemented.
+
 # Project status
 
 Updated 5 October 2026.
